@@ -1,0 +1,20 @@
+package conf
+
+import "github.com/pkg/errors"
+
+// 数据库错误
+var DBSelectError = errors.New("DB select error")
+var DBInsertError = errors.New("DB insert error")
+var DBDeleteError = errors.New("DB delete error")
+var DBUpdateError = errors.New("DB update error")
+var DBNotFoundError = errors.New("DB not found error")
+
+// 数据处理错误
+var JsonError = errors.New("JSON parse error")
+
+// 参数校验
+var ParamError = errors.New("Param check error")
+
+// 文件上传
+var VolumeError = errors.New("User volume run out")
+var FilePathError = errors.New("Invaild file path")
