@@ -19,7 +19,8 @@ func RegisterRouter(r *gin.Engine) {
 
 	o := r.Group("/object")
 	{
-		o.POST("/upload", middleware.JWT(true), middleware.ExistCheck(0), object.UploadHandler)
+		o.POST("/upload", middleware.JWT(true), middleware.ExistCheck(1), object.UploadHandler)
 		o.POST("/mkdir", middleware.JWT(true), middleware.ExistCheck(0), object.MakeDirHandler)
+		o.GET("/list", middleware.JWT(true), object.GetFileListHandler)
 	}
 }

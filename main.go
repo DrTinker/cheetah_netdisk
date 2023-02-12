@@ -13,9 +13,9 @@ func init() {
 	start.InitConfig() // 加载配置
 	start.InitDB()     // 数据库
 	start.InitCache()  // 缓存
-	start.InitMsg()    // 邮件系统
-	start.InitCOS()    //对象存储
-	start.InitJWT()    // 用户token
+	start.InitJWT()
+	start.InitMsg() // 邮件系统
+	start.InitCOS() //对象存储re
 }
 
 func main() {

@@ -20,15 +20,16 @@ type Login struct {
 }
 
 type User struct {
-	ID           uint `gorm:"primaryKey"`
+	ID           uint `gorm:"primaryKey" json:"-"`
 	Uuid         string
 	Name         string
 	Password     string `json:"password,omitempty"`
 	Email        string
 	Phone        string
-	Level        int   // 0: 普通用户， 1：VIP用户， 2：特权用户
-	Now_Volume   int64 // 已使用存储容量，单位B
-	Total_Volume int64 // 总存储容量，单位B
+	Level        int    // 0: 普通用户， 1：VIP用户， 2：特权用户
+	Start_Uuid   string // 用户文件空间根目录uuid，对应user_file表的uuid
+	Now_Volume   int64  // 已使用存储容量，单位B
+	Total_Volume int64  // 总存储容量，单位B
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`

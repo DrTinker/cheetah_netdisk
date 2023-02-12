@@ -94,8 +94,8 @@ func (d *DBClientImpl) CheckFileExist(hash string) (bool, error) {
 }
 
 // 存储上传文件记录
-func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.UserFile, now int64) error {
-	d.DBConn.Transaction(func(tx *gorm.DB) error {
+func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.UserFile) error {
+	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		// 从这里开始使用 'tx' 而不是 'db'
 		// user_file表增加记录
 		if err := tx.Table(conf.User_File_TB).Create(userFile).Error; err != nil {
@@ -106,8 +106,17 @@ func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.Us
 		if err := tx.Table(conf.File_Pool_TB).Create(file).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Create file err:")
 		}
-		// 更改user表当前空间
-		cur := now + int64(file.Size)
+		// 检查文件大小
+		user := &models.User{}
+		err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).First(user).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] GetUserVolume Select err:")
+		}
+		cur := user.Now_Volume + int64(file.Size)
+		if user.Total_Volume < cur+int64(file.Size) {
+			return conf.VolumeError
+		}
+		// 更新用户空间大小
 		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).
 			Update(conf.User_Now_Volume_DB, cur).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Update user err:")
@@ -115,5 +124,49 @@ func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.Us
 		// 返回 nil 提交事务
 		return nil
 	})
-	return nil
+	return err
+}
+
+// 删除上传记录，用于回滚
+func (d *DBClientImpl) DeleteUploadRecord(file_uuid, user_file_uuid string) error {
+	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
+		userFile := &models.UserFile{}
+		// user_file表增加记录
+		if err := tx.Table(conf.User_File_TB).Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Delete(userFile).Error; err != nil {
+			// 返回任何错误都会回滚事务
+			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
+		}
+		file := &models.File{}
+		// user_file表增加记录
+		if err := tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).Delete(file).Error; err != nil {
+			// 返回任何错误都会回滚事务
+			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
+		}
+		return nil
+	})
+	return err
+}
+
+// 获取文件列表
+func (d *DBClientImpl) GetFileList(parentId int) (files []*models.UserFile, err error) {
+	// find无需初始化，且应传入数组指针
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_Parent_DB+"=?", parentId).Find(&files).Error
+	if files == nil || err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetFileList err:")
+	}
+	return
+}
+
+// 通过文件uuid获取id
+func (d *DBClientImpl) GetFileIDByUuid(uuids []string) (ids []int, err error) {
+	var files []models.UserFile
+	ids = make([]int, len(uuids))
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+" in (?)", uuids).Find(&files).Error
+	if files == nil || err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetFileIDByUuid err:")
+	}
+	for i, file := range files {
+		ids[i] = int(file.ID)
+	}
+	return ids, nil
 }

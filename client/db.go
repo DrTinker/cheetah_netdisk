@@ -14,7 +14,10 @@ type DBClient interface {
 
 	// file
 	CheckFileExist(hash string) (bool, error)
-	CreateUploadRecord(file *models.File, userFile *models.UserFile, now int64) error
+	CreateUploadRecord(file *models.File, userFile *models.UserFile) error
+	GetFileList(parentId int) (files []*models.UserFile, err error)
+	GetFileIDByUuid(uuids []string) (ids []int, err error)
+	DeleteUploadRecord(file_uuid, user_file_uuid string) error
 }
 
 var (

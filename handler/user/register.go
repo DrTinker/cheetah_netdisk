@@ -3,10 +3,13 @@ package user
 import (
 	"NetDisk/client"
 	"NetDisk/conf"
+	"NetDisk/handler/general"
 	"NetDisk/helper"
 	"NetDisk/models"
+	"crypto/md5"
 	"fmt"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -63,6 +66,13 @@ func RegisterHandler(c *gin.Context) {
 	user.Now_Volume = 0
 	user.Total_Volume = conf.User_Normal_Volume // 单位B
 
+	// 生成用户空间根目录uuid
+	fileKey := fmt.Sprintf("%s/%s-%s/", conf.Default_System_Prefix, user.Name, user.Uuid)
+	file_uuid := helper.GenFid(fileKey)
+	user_file_uuid := helper.GenUserFid(user.Uuid, fileKey)
+	user.Start_Uuid = user_file_uuid
+
+	// 创建用户记录
 	err = client.GetDBClient().CreateUser(&user)
 	if err != nil {
 		log.Error("RegisterHandler err: %+v", err)
@@ -73,54 +83,37 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
+	// 创建用户文件空间根目录
+	// 上传
+	err = general.UploadObject(&models.UploadObjectParams{
+		FileKey:        fileKey,
+		User_Uuid:      user.Uuid,
+		Hash:           fmt.Sprintf("%x", md5.Sum([]byte(fileKey))),
+		Size:           conf.Folder_Default_Size,
+		File_Uuid:      file_uuid,
+		User_File_Uuid: user_file_uuid,
+	}, strings.NewReader(""))
+	if err != nil {
+		log.Error("UploadHandler err: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_UPLOAD_CODE,
+			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileKey),
+		})
+		return
+	}
+	if err != nil {
+		log.Error("UploadHandler err: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_UPLOAD_CODE,
+			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileKey),
+		})
+		return
+	}
 	// 返回成功
 	log.Info("RegisterHandler success: ", user.Uuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    conf.HTTP_SUCCESS_CODE,
 		"msg":     conf.SUCCESS_RESP_MESSAGE,
 		"user_id": id,
-	})
-}
-
-// TODO 验证码生成
-func EmailVerifyHandler(c *gin.Context) {
-	// 获取配置文件
-	cfg, err := client.GetConfigClient().GetEmailConfig()
-	if err != nil {
-		log.Error("EmailVerifyHandler err: %+v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code": conf.ERROR_REGISTER_CODE,
-			"msg":  conf.REGISTER_ERROR_MESSAGE,
-		})
-	}
-	// 获取参数
-	to := c.Query(conf.User_Email)
-	// 生成验证码
-	code := helper.GenRandCode()
-	err = client.GetCacheClient().SetWithExpire(conf.Code_Cache_Key, code, conf.Code_Expire)
-	if err != nil {
-		log.Error("EmailVerifyHandler err: %+v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code": conf.ERROR_VERIFY_CODE,
-			"msg":  conf.VERIFY_CODE_GEN_ERROR_MESSAGE,
-		})
-	}
-	// 发送邮件
-	content := fmt.Sprintf(conf.Email_Verify_Page, code)
-	err = client.GetMsgClient().SendHTMLWithTls(cfg, to, content, conf.Email_Verify_MSG)
-	if err != nil {
-		log.Error("EmailVerifyHandler err: %+v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code": conf.ERROR_EMAIL_SEND_CODE,
-			"msg":  conf.FAIL_EMAIL_MESSAGE,
-		})
-		return
-	}
-
-	// 返回信息
-	log.Info("EmailVerifyHandler: email send success ", to)
-	c.JSON(http.StatusOK, gin.H{
-		"code": conf.HTTP_SUCCESS_CODE,
-		"msg":  conf.SUCCESS_EMAIL_MESSAGE,
 	})
 }

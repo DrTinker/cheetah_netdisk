@@ -2,6 +2,7 @@ package object
 
 import (
 	"NetDisk/conf"
+	"NetDisk/helper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,5 +22,18 @@ func CopyHandler(c *gin.Context) {
 		})
 		return
 	}
-	//
+	// 获取
+	// 获取用户ID
+	var user_uuid string
+	if idstr, f := c.Get(conf.User_ID); f {
+		user_uuid = helper.Strval(idstr)
+	}
+	if user_uuid == "" {
+		log.Error("UploadHandler uuid empty")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
 }

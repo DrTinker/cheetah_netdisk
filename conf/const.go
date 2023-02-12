@@ -7,7 +7,7 @@ const App = "conf/app.ini"
 const HttpServer = "HttpServer"
 
 // jwt
-const JWTKeyValue = "cheetah_net_desk"
+const JWTKeyValue = "cheetah_net_disk"
 const JWTExpireValue = 36000
 const JWTFlag = "jwt_flag"        // 标识本次登录是否携带JWT
 const JWTClaims = "jwt_claims"    // 存储jwt的声明字段
@@ -40,6 +40,8 @@ const User_Email_DB = "email"
 const User_Now_Volume_DB = "now_volume"
 const File_UUID_DB = "uuid"
 const File_Hash_DB = "hash"
+const User_File_UUID_DB = "uuid"
+const User_File_Parent_DB = "parent_id"
 
 // 邮件
 const Email_Verify_MSG = "Cheetah Net Desk验证码"
@@ -60,3 +62,4 @@ const File_Exist_Flag = "exist"
 
 // 文件存储
 const Default_System_Prefix = "test" // 文件系统根目录，未来替换为root
+const Default_System_parent = 0      // root对应ID
