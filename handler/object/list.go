@@ -28,7 +28,7 @@ func GetFileListHandler(c *gin.Context) {
 	}
 	id := ids[0]
 	// 查询数据库获取列表
-	files, err := client.GetDBClient().GetFileList(id)
+	files, err := client.GetDBClient().GetUserFileList(id)
 	if err != nil || files == nil {
 		log.Error("GetFileListHandler get id err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

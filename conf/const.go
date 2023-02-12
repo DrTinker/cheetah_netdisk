@@ -40,8 +40,12 @@ const User_Email_DB = "email"
 const User_Now_Volume_DB = "now_volume"
 const File_UUID_DB = "uuid"
 const File_Hash_DB = "hash"
+const File_Link_DB = "link"
+const File_Path_DB = "path"
+const User_File_ID_DB = "id"
 const User_File_UUID_DB = "uuid"
 const User_File_Parent_DB = "parent_id"
+const User_File_Pool_UUID_DB = "file_uuid"
 
 // 邮件
 const Email_Verify_MSG = "Cheetah Net Desk验证码"

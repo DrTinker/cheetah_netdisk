@@ -31,3 +31,5 @@ const FAIL_EMAIL_MESSAGE = "Verify code send fail"
 // 文件系统
 const LIST_FILES_FAIL_MESSAGE = "Get file list error"
 const LIST_FILES_SUCCESS_MESSAGE = "Get file list success"
+const GET_INFO_FAIL_MESSAGE = "Get file info error"
+const COPY_FILE_FAIL_MESSAGE = "Copy file error"

@@ -75,6 +75,27 @@ func UploadObject(param *models.UploadObjectParams, fd io.Reader) error {
 	return nil
 }
 
-func CopyFile(src, des string) error {
+// mod: 0复制文件，1移动文件
+func AlterObject(src_uuid, des_parent_uuid string, mod int) error {
+	// 通过uuid获取id
+	uuids := []string{src_uuid, des_parent_uuid}
+	ids, err := client.GetDBClient().GetFileIDByUuid(uuids)
+	if err != nil || len(ids) != 2 {
+		return errors.Wrap(err, "[MoveObject] get ids error: ")
+	}
+	switch mod {
+	case 0:
+		// 复制
+		if err := client.GetDBClient().CopyUserFile(ids[0], ids[1]); err != nil {
+			return errors.Wrap(err, "[MoveObject] copy error: ")
+		}
+	case 1:
+		// 移动
+		if err := client.GetDBClient().UpdateUserFileParent(ids[0], ids[1]); err != nil {
+			return errors.Wrap(err, "[MoveObject] move error: ")
+		}
+	default:
+		return conf.ParamError
+	}
 	return nil
 }

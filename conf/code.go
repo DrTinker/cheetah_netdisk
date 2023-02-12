@@ -30,3 +30,5 @@ const ERROR_FILE_HASH_CODE = 22005        // 文件md5值无效
 
 // 文件系统
 const ERROR_LIST_FILES_CODE = 23000
+const ERROR_GET_INFO_CODE = 23001
+const ERROR_FILE_COPY_CODE = 23002

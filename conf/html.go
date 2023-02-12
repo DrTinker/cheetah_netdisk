@@ -10,6 +10,7 @@ const File_Hash_Key = "md5"
 const File_Uuid_Key = "uuid"
 const File_Name_Form_Key = "name"
 const Folder_Path_Key = "path"
+const File_Path_Key = "path"
 const Folder_Uuid_Key = "uuid"
 const File_Parent_Form_Key = "parent"
 const File_Src_Key = "src" // 文件复制原地址
