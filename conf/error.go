@@ -18,3 +18,6 @@ var ParamError = errors.New("Param check error")
 // 文件上传
 var VolumeError = errors.New("User volume run out")
 var FilePathError = errors.New("Invaild file path")
+
+// 文件操作
+var NameRepeatError = errors.New("File name exist")

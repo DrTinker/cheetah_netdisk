@@ -25,5 +25,8 @@ func RegisterRouter(r *gin.Engine) {
 		o.POST("/copy", middleware.JWT(true), object.CopyFileHandler)
 		o.POST("/move", middleware.JWT(true), object.MoveFileHandler)
 		o.GET("/info/path", middleware.JWT(true), object.GetFileInfoByPathHandler)
+		// TODO 文件改名、删除
+		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
+		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
 	}
 }

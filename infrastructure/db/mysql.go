@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/schema"
 
 	"NetDisk/conf"
+	"NetDisk/helper"
 	"NetDisk/models"
 )
 
@@ -83,16 +84,16 @@ func (d *DBClientImpl) GetUserVolume(id string) (now, total int64, err error) {
 
 // 文件
 // 检测文件存在性,false表示不存在
-func (d *DBClientImpl) CheckFileExist(hash string) (bool, error) {
+func (d *DBClientImpl) CheckFileExist(hash string) (bool, string, error) {
 	file := &models.File{}
-	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_Hash_DB+"=?", hash).First(file).Error
+	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_Hash_DB+"=?", hash).Select(conf.File_UUID_DB).First(file).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
+			return false, "", nil
 		}
-		return false, errors.Wrap(err, "[DBClientImpl] GetUserByEmail Select err:")
+		return false, "", errors.Wrap(err, "[DBClientImpl] GetUserByEmail Select err:")
 	}
-	return true, nil
+	return true, file.Uuid, nil
 }
 
 // 存储上传文件记录
@@ -133,13 +134,13 @@ func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.Us
 func (d *DBClientImpl) DeleteUploadRecord(file_uuid, user_file_uuid string) error {
 	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		userFile := &models.UserFile{}
-		// user_file表增加记录
+		// user_file表删除记录
 		if err := tx.Table(conf.User_File_TB).Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Delete(userFile).Error; err != nil {
 			// 返回任何错误都会回滚事务
 			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
 		}
 		file := &models.File{}
-		// user_file表增加记录
+		// file_pool表删除记录
 		if err := tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).Delete(file).Error; err != nil {
 			// 返回任何错误都会回滚事务
 			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
@@ -149,10 +150,20 @@ func (d *DBClientImpl) DeleteUploadRecord(file_uuid, user_file_uuid string) erro
 	return err
 }
 
+// 获取父级文件
+func (d *DBClientImpl) GetUserFileParent(uuid string) (file *models.UserFile, err error) {
+	file = &models.UserFile{}
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_UUID_DB+"=?", uuid).Find(file).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetUserFileParent err:")
+	}
+	return file, nil
+}
+
 // 获取文件列表
-func (d *DBClientImpl) GetUserFileList(parentId int) (files []*models.UserFile, err error) {
+func (d *DBClientImpl) GetUserFileList(parent_id int) (files []*models.UserFile, err error) {
 	// find无需初始化，且应传入数组指针
-	err = d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_Parent_DB+"=?", parentId).Find(&files).Error
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_Parent_DB+"=?", parent_id).Find(&files).Error
 	if files == nil || err != nil {
 		return nil, errors.Wrap(err, "[DBClientImpl] GetFileList err:")
 	}
@@ -160,22 +171,27 @@ func (d *DBClientImpl) GetUserFileList(parentId int) (files []*models.UserFile, 
 }
 
 // 通过文件uuid获取id
-// TODO 优化查询select *
-func (d *DBClientImpl) GetFileIDByUuid(uuids []string) (ids []int, err error) {
+func (d *DBClientImpl) GetUserFileIDByUuid(uuids []string) (ids map[string]int, err error) {
 	var files []models.UserFile
-	ids = make([]int, len(uuids))
-	err = d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+" in (?)", uuids).Find(&files).Error
-	if files == nil || err != nil {
+	ids = make(map[string]int, len(uuids))
+	// 查出来file是乱序的
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+" in (?)", uuids).
+		Select(conf.User_File_ID_DB, conf.User_File_UUID_DB).Find(&files).Error
+	if len(files) == 0 || err != nil {
+		if err == nil {
+			err = conf.DBNotFoundError
+		}
 		return nil, errors.Wrap(err, "[DBClientImpl] GetFileIDByUuid err:")
 	}
-	for i, file := range files {
-		ids[i] = int(file.ID)
+	for _, file := range files {
+		uuid := file.Uuid
+		ids[uuid] = int(file.ID)
 	}
 	return ids, nil
 }
 
 // 通过COS文件唯一KEY获取用户文件信息
-func (d *DBClientImpl) GetFileByPath(path string) (user_file *models.UserFile, err error) {
+func (d *DBClientImpl) GetUserFileByPath(path string) (user_file *models.UserFile, err error) {
 	user_file = &models.UserFile{}
 	// 拼接sql
 	ft := conf.File_Pool_TB
@@ -212,17 +228,21 @@ func (d *DBClientImpl) GetUserFileBatch(uuids []string) (files []*models.UserFil
 }
 
 // 在用户文件空间复制
-func (d *DBClientImpl) CopyUserFile(src_id, des_parent_id int) error {
+// TODO 处理文件夹复制
+func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error) {
+	// 生成新id, uuid和parentId
+	copy_file := &models.UserFile{
+		Uuid:      helper.GenUserFid(src_file.User_Uuid, src_file.Name+"_copy"),
+		Parent_Id: des_parent_id,
+		Name:      src_file.Name,
+		Ext:       src_file.Ext,
+		User_Uuid: src_file.User_Uuid,
+		File_Uuid: src_file.File_Uuid,
+	}
 	// 复制文件
-	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
-		// 根据src_id查询src文件
-		src_file := &models.UserFile{}
-		if err := tx.Table(conf.User_File_TB).Where(conf.User_File_ID_DB+"=?", src_id).First(src_file).Error; err != nil {
-			return errors.Wrap(err, "[DBClientImpl] CopyUserFile select src err:")
-		}
-		src_file.Parent_Id = des_parent_id
+	if err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		// 复制user_file记录
-		if err := tx.Table(conf.User_File_TB).Create(src_file).Error; err != nil {
+		if err := tx.Table(conf.User_File_TB).Create(copy_file).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CopyUserFile create copy err:")
 		}
 		// 增加file_pool中link数
@@ -232,8 +252,12 @@ func (d *DBClientImpl) CopyUserFile(src_id, des_parent_id int) error {
 			return errors.Wrap(err, "[DBClientImpl] CopyUserFile increase link err:")
 		}
 		return nil
-	})
-	return err
+	}); err != nil {
+		return -1, err
+	}
+	// 返回新文件id，用于文件夹复制
+	id := copy_file.ID
+	return int(id), nil
 }
 
 // 移动用户空间文件
@@ -245,22 +269,77 @@ func (d *DBClientImpl) UpdateUserFileParent(src_id, des_parent_id int) error {
 	return nil
 }
 
-// 删除单个用户文件，用于移动和删除
-func (d *DBClientImpl) DeleteUserFileByUuid(uuid string) error {
-	file := &models.UserFile{}
-	err := d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+"=?", uuid).Delete(file).Error
-	if err != nil {
-		return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid err:")
+// 文件名称修改
+func (d *DBClientImpl) UpdateUserFileName(name, ext, uuid string) error {
+	if err := d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_UUID_DB+"=?", uuid).
+		Updates(models.UserFile{Name: name, Ext: ext}).Error; err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateUserFileName update name err:")
 	}
 	return nil
 }
 
+// 删除单个用户文件，用于移动和删除
+func (d *DBClientImpl) DeleteUserFileByUuid(uuid string) error {
+	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
+		file := &models.UserFile{}
+		err := d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+"=?", uuid).Delete(file).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid delete user file err:")
+		}
+		err = d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", uuid).
+			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", -1)).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid update link err:")
+		}
+		return nil
+	})
+	return err
+}
+
 // 删除批量用户文件，用于批量移动和删除
+// 弃用
 func (d *DBClientImpl) DeleteUserFileBatch(uuids string) error {
 	file := &models.UserFile{}
 	err := d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+" in (?)", uuids).Delete(file).Error
 	if err != nil {
 		return errors.Wrap(err, "[DBClientImpl] DeleteUserFileBatch err:")
+	}
+	return nil
+}
+
+// 查看文件引用数
+func (d *DBClientImpl) GetFileLink(uuid string) (link int, err error) {
+	file := &models.File{}
+	err = d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", uuid).Select(conf.User_File_ID_DB).Find(file).Error
+	if err != nil {
+		return 0, errors.Wrap(err, "[DBClientImpl] GetFileLink err:")
+	}
+	return file.Link, nil
+}
+
+// 修改文件文件引用数
+func (d *DBClientImpl) UpdateFileLink(uuid string, data int) error {
+	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", uuid).
+		Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", data)).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] GetFileLink err:")
+	}
+	return nil
+}
+
+// 获取file_pool
+func (d *DBClientImpl) GetFileByUuid(uuid string) (file *models.File, err error) {
+	file = &models.File{}
+	err = d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", uuid).First(file).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetFileByUuid err:")
+	}
+	return file, nil
+}
+
+func (d *DBClientImpl) CreateUserFile(user_file *models.UserFile) error {
+	if err := d.DBConn.Table(conf.User_File_TB).Create(user_file).Error; err != nil {
+		return errors.Wrap(err, "[DBClientImpl] CreateUserFile err:")
 	}
 	return nil
 }

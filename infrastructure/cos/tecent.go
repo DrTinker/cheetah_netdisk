@@ -121,6 +121,15 @@ func (c *COSClientImpl) Copy(src, des string) error {
 	return nil
 }
 
+// 删除对象为文件夹时不影响其下子文件，全部子文件的KEY不变，可按原方式访问
+func (c *COSClientImpl) Delete(key string) error {
+	_, err := c.COSClient.Object.Delete(context.Background(), key)
+	if err != nil {
+		return errors.Wrap(err, "[COSClientImpl] Delete file error: ")
+	}
+	return nil
+}
+
 // 上传文件流，超过16M时将进行分片并通过多线程上传，每片大小16M，当有分片上传失败时终止上传
 // 弃用
 func (c *COSClientImpl) UpLoadStreamPart(key string, stream io.Reader, opts *models.MultiFileUploadOptions) error {

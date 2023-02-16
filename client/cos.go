@@ -17,6 +17,8 @@ type COSClient interface {
 	InitMultipartUpload(key string, opts *models.MultiFileUploadOptions) (string, error)
 	CompleteMultipartUpload(key, uploadID string, tags []models.Part) error
 	UploadPart(pos int, data []byte, key, uploadID string) (*models.Part, error)
+	// 删除
+	Delete(key string) error
 }
 
 var (

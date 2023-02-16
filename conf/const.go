@@ -44,6 +44,8 @@ const File_Link_DB = "link"
 const File_Path_DB = "path"
 const User_File_ID_DB = "id"
 const User_File_UUID_DB = "uuid"
+const User_File_Name_DB = "name"
+const User_File_EXT_DB = "ext"
 const User_File_Parent_DB = "parent_id"
 const User_File_Pool_UUID_DB = "file_uuid"
 

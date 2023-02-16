@@ -15,7 +15,7 @@ import (
 
 func MakeDirHandler(c *gin.Context) {
 	// 获取文件夹路径
-	fileKey := c.GetString(conf.File_Name_Form_Key)
+	fileKey := c.GetString(conf.File_Name_Key)
 	hash := c.GetString(conf.File_Hash_Key)
 
 	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
@@ -53,7 +53,7 @@ func MakeDirHandler(c *gin.Context) {
 		Size:           conf.Folder_Default_Size,
 		File_Uuid:      file_uuid,
 		User_File_Uuid: user_file_uuid,
-	}, strings.NewReader(""))
+	}, strings.NewReader(""), false)
 	if err != nil {
 		log.Error("UploadHandler err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

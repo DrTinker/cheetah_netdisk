@@ -1,6 +1,7 @@
 package object
 
 import (
+	"NetDisk/client"
 	"NetDisk/conf"
 	"NetDisk/handler/general"
 	"NetDisk/helper"
@@ -12,8 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// 单个上传文件 or 创建文件夹
-// TODO 先实现串行上传多个文件，再优化为多线程上传
+// 单个上传文件
+// TODO 文件
 func UploadHandler(c *gin.Context) {
 	// gin获取文件和文件key
 	file, err := c.FormFile(conf.File_Form_Key)
@@ -26,7 +27,7 @@ func UploadHandler(c *gin.Context) {
 		return
 	}
 	// 检查存在性的中间件已经读取过了，因此从ctx中获取
-	fileKey := c.GetString(conf.File_Name_Form_Key)
+	fileKey := c.GetString(conf.File_Name_Key)
 	hash := c.GetString(conf.File_Hash_Key)
 
 	// 前端传入uuid后端查询id
@@ -65,6 +66,12 @@ func UploadHandler(c *gin.Context) {
 	}
 	// 生成ID
 	file_uuid := helper.GenFid(fileKey)
+	// 查看是否秒传
+	flag := c.GetBool(conf.File_Quick_Upload_Key)
+	if flag {
+		// 秒传file_pool中uuid不变
+		file_uuid = c.GetString(conf.File_Uuid_Key)
+	}
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
 	// 上传
 	err = general.UploadObject(&models.UploadObjectParams{
@@ -75,7 +82,7 @@ func UploadHandler(c *gin.Context) {
 		Size:           int(file.Size),
 		File_Uuid:      file_uuid,
 		User_File_Uuid: user_file_uuid,
-	}, fd)
+	}, fd, flag)
 	if err != nil {
 		log.Error("UploadHandler err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -91,4 +98,52 @@ func UploadHandler(c *gin.Context) {
 		"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
 		"file_id": user_file_uuid,
 	})
+}
+
+// TODO 完善分片上传
+func InitUploadPartHandler(c *gin.Context) {
+	// 获取文件唯一KEY
+	fileKey := c.PostForm(conf.File_Name_Key)
+	if fileKey == "" {
+		log.Error("UploadHandler empty file key")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 获取用户ID
+	var user_uuid string
+	if idstr, f := c.Get(conf.User_ID); f {
+		user_uuid = helper.Strval(idstr)
+	}
+	if user_uuid == "" {
+		log.Error("InitUploadPartHandler uuid empty")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 生成文件uuid
+	fileId := helper.GenFid(fileKey)
+	userFileId := helper.GenUserFid(user_uuid, fileKey)
+	// 调用COS接口
+	uploadId, err := client.GetCOSClient().InitMultipartUpload(fileKey, nil)
+	if err != nil || uploadId == "" {
+		log.Error("InitUploadPartHandler get upload id error: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_UPLOAD_PART_INIT_CODE,
+			"msg":  conf.UPLOAD_PART_INIT_FAIL_MESSAGE,
+		})
+		return
+	}
+	log.Info("InitUploadPartHandler success: ", fileId)
+	c.JSON(http.StatusBadRequest, gin.H{
+		"code":         conf.ERROR_UPLOAD_PART_INIT_CODE,
+		"msg":          conf.UPLOAD_PART_INIT_FAIL_MESSAGE,
+		"file_id":      fileId,
+		"user_file_id": userFileId,
+	})
+
 }

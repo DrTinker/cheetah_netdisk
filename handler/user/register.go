@@ -92,15 +92,7 @@ func RegisterHandler(c *gin.Context) {
 		Size:           conf.Folder_Default_Size,
 		File_Uuid:      file_uuid,
 		User_File_Uuid: user_file_uuid,
-	}, strings.NewReader(""))
-	if err != nil {
-		log.Error("UploadHandler err: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
-			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileKey),
-		})
-		return
-	}
+	}, strings.NewReader(""), false)
 	if err != nil {
 		log.Error("UploadHandler err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

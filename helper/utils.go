@@ -90,3 +90,21 @@ func SplitFilePath(path string) (name, ext string, err error) {
 
 	return name, ext, nil
 }
+
+// 切分name.ext -> name ext
+func SplitFileFullName(fullName string) (name string, ext string, err error) {
+	// 是文件夹则增加默认文件夹扩展名
+	if !strings.Contains(fullName, ".") {
+		fullName = fullName + "." + conf.Folder_Default_EXT
+	}
+	if len(fullName) == 0 {
+		return "", "", conf.FilePathError
+	}
+	part := strings.Split(fullName, ".")
+	if len(part) != 2 {
+		return "", "", conf.FilePathError
+	}
+	name = part[0]
+	ext = part[1]
+	return name, ext, nil
+}

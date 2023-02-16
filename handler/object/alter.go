@@ -3,6 +3,7 @@ package object
 import (
 	"NetDisk/conf"
 	"NetDisk/handler/general"
+	"NetDisk/helper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,7 @@ func CopyFileHandler(c *gin.Context) {
 		return
 	}
 	// 复制
-	err := general.AlterObject(src, des, 0)
+	err := general.CopyObject(src, des)
 	if err != nil {
 		log.Error("CopyHandler copy err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -53,7 +54,7 @@ func MoveFileHandler(c *gin.Context) {
 		return
 	}
 	// 移动
-	err := general.AlterObject(src, des, 1)
+	err := general.MoveObject(src, des)
 	if err != nil {
 		log.Error("MoveFileHandler copy err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -63,6 +64,74 @@ func MoveFileHandler(c *gin.Context) {
 		return
 	}
 	log.Info("MoveFileHandler copy success: ", src)
+	c.JSON(http.StatusBadRequest, gin.H{
+		"code": conf.HTTP_SUCCESS_CODE,
+		"msg":  conf.SUCCESS_RESP_MESSAGE,
+	})
+}
+
+func FileUpdateHandler(c *gin.Context) {
+	// 获取文件uuid user_file
+	user_file_uuid := c.PostForm(conf.File_Uuid_Key)
+	if user_file_uuid == "" {
+		log.Error("FileUpdateHandler err: invaild file uuid")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 获取更改后名称，只传入全名 name.ext
+	fullName := c.PostForm(conf.File_Name_Key)
+	name, ext, err := helper.SplitFileFullName(fullName)
+	if err != nil || name == "" || ext == "" {
+		log.Error("FileUpdateHandler err: invaild file name")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 仅更改名称
+	if err := general.UpdateObjectName(user_file_uuid, name, ext); err != nil {
+		log.Error("FileUpdateHandler update err: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_UPDATE_NAME_CODE,
+			"msg":  conf.UPDATE_FILE_NAME_FAIL_MESSAGE,
+		})
+		return
+	}
+	// 成功
+	log.Info("FileUpdateHandler success: ", user_file_uuid)
+	c.JSON(http.StatusBadRequest, gin.H{
+		"code": conf.HTTP_SUCCESS_CODE,
+		"msg":  conf.SUCCESS_RESP_MESSAGE,
+	})
+}
+
+func FileDeleteHandler(c *gin.Context) {
+	// 获取文件uuid user_file
+	user_file_uuid := c.PostForm(conf.File_Uuid_Key)
+	if user_file_uuid == "" {
+		log.Error("FileDeleteHandler err: invaild file uuid")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 删除数据库记录
+	// 判断file_pool中引用数，若未0则删除COS中文件
+	if err := general.DeleteObject(user_file_uuid); err != nil {
+		log.Error("FileDeleteHandler err: invaild file uuid")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_DELETE_FILE_CODE,
+			"msg":  conf.DELETE_FILE_FAIL_MESSAGE,
+		})
+		return
+	}
+	// 成功
+	log.Info("FileDeleteHandler success: ", user_file_uuid)
 	c.JSON(http.StatusBadRequest, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,
