@@ -45,7 +45,7 @@ func MakeDirHandler(c *gin.Context) {
 	file_uuid := helper.GenFid(fileKey)
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
 	// 上传
-	err := general.UploadObject(&models.UploadObjectParams{
+	err := general.UploadObjectServer(&models.UploadObjectParams{
 		FileKey:        fileKey,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,

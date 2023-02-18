@@ -12,8 +12,8 @@ import (
 )
 
 // TODO 抽象为service层
-// flag为秒传标识
-func UploadObject(param *models.UploadObjectParams, fd io.Reader, flag bool) error {
+// 服务端上传文件，flag为秒传标识
+func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag bool) error {
 	fileKey := param.FileKey
 	user_uuid := param.User_Uuid
 	hash := param.Hash
@@ -71,6 +71,67 @@ func UploadObject(param *models.UploadObjectParams, fd io.Reader, flag bool) err
 	err = client.GetCOSClient().UploadStream(fileKey, fd)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] upload cos error: ")
+	}
+	// 插入上传记录
+	err = client.GetDBClient().CreateUploadRecord(fileDB, userFileDB)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] store upload record error: ")
+	}
+	return nil
+}
+
+func UploadObjectClient(param *models.UploadObjectParams, flag bool) error {
+	fileKey := param.FileKey
+	user_uuid := param.User_Uuid
+	hash := param.Hash
+	size := param.Size
+	file_uuid := param.File_Uuid
+	user_file_uuid := param.User_File_Uuid
+
+	// 获取父级文件夹ID
+	var parentId int
+	if param.Parent == "" {
+		parentId = conf.Default_System_parent
+	} else {
+		user_file_uuid_parent := param.Parent
+		ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{user_file_uuid_parent})
+		if err != nil || ids == nil {
+			return errors.Wrap(err, "[UploadObject] get parent id error: ")
+		}
+		parentId = ids[user_file_uuid_parent]
+	}
+
+	// 从文件KEY中获取文件名称
+	name, ext, err := helper.SplitFilePath(fileKey)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] split file key error: ")
+	}
+
+	// 拼装结构体
+	fileDB := &models.File{
+		Uuid: file_uuid,
+		Name: name,
+		Ext:  ext,
+		Path: fileKey,
+		Hash: hash,
+		Link: 1,
+		Size: size,
+	}
+	userFileDB := &models.UserFile{
+		Uuid:      user_file_uuid,
+		User_Uuid: user_uuid,
+		Parent_Id: parentId,
+		File_Uuid: file_uuid,
+		Name:      name,
+		Ext:       ext,
+	}
+	// 如果是秒传，只在user_file中插入记录
+	if flag {
+		err = client.GetDBClient().CreateUserFile(userFileDB)
+		if err != nil {
+			return errors.Wrap(err, "[UploadObject] store upload record error: ")
+		}
+		return nil
 	}
 	// 插入上传记录
 	err = client.GetDBClient().CreateUploadRecord(fileDB, userFileDB)

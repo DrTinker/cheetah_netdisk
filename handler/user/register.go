@@ -85,7 +85,7 @@ func RegisterHandler(c *gin.Context) {
 
 	// 创建用户文件空间根目录
 	// 上传
-	err = general.UploadObject(&models.UploadObjectParams{
+	err = general.UploadObjectServer(&models.UploadObjectParams{
 		FileKey:        fileKey,
 		User_Uuid:      user.Uuid,
 		Hash:           fmt.Sprintf("%x", md5.Sum([]byte(fileKey))),

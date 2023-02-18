@@ -27,6 +27,7 @@ const ERROR_FILE_CHECK_CODE = 22002       // 文件校验时出错
 const ERROR_FILE_EXIST_CODE = 22003       // 文件存在
 const ERROR_UPLOAD_PART_INIT_CODE = 22004 // 初始化
 const ERROR_FILE_HASH_CODE = 22005        // 文件md5值无效
+const ERROR_GET_URL_CODE = 22006          // 获取预签名错误
 
 // 文件系统
 const ERROR_LIST_FILES_CODE = 23000

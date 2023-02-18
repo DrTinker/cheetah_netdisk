@@ -12,6 +12,7 @@ type Share struct {
 	User_Uuid      string // 用户uuid
 	User_File_Uuid string // user_file表中的uuid
 	File_Uuid      string // file表中的uuid，用于索引，前端不可见
+	Code           string // 分享密码
 	Expire         int    // 有效时间
 	Click          int    // 点击数
 	CreatedAt      time.Time

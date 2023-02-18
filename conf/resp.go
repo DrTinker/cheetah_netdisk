@@ -23,6 +23,7 @@ const FILE_EXIST_MESSAGE = "File already exist"
 const UPLOAD_SUCCESS_MESSAGE = "File upload success"
 const UPLOAD_PART_INIT_FAIL_MESSAGE = "Init mutipart upload error"
 const FILE_HASH_INVAILD_MESSAGE = "File md5 value invaild"
+const GET_SIGN_ERROR_MESSAGE = "Get presign error"
 
 // 邮件
 const SUCCESS_EMAIL_MESSAGE = "Verify code send success"

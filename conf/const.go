@@ -67,5 +67,6 @@ const Folder_Default_EXT = "folder"
 const File_Exist_Flag = "exist"
 
 // 文件存储
-const Default_System_Prefix = "test" // 文件系统根目录，未来替换为root
-const Default_System_parent = 0      // root对应ID
+const Default_System_Prefix = "test"         // 文件系统根目录，未来替换为root
+const Default_System_parent = 0              // root对应ID
+const Default_Sign_Expire = time.Minute * 15 // 签名默认有效时间

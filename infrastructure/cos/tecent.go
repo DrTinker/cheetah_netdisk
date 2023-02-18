@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -128,6 +129,17 @@ func (c *COSClientImpl) Delete(key string) error {
 		return errors.Wrap(err, "[COSClientImpl] Delete file error: ")
 	}
 	return nil
+}
+
+// 生成预签名URL，用于文件上传下载
+func (c *COSClientImpl) GetPresignedUrl(fileKey string, expire time.Duration) (url string, err error) {
+	secretID := c.COSClient.GetCredential().SecretID
+	secretKey := c.COSClient.GetCredential().SecretKey
+	presignedURL, err := c.COSClient.Object.GetPresignedURL(context.Background(), http.MethodPut, fileKey, secretID, secretKey, expire, nil)
+	if err != nil {
+		return "", errors.Wrap(err, "[COSClientImpl] GetPresignedUrl error: ")
+	}
+	return presignedURL.RequestURI(), err
 }
 
 // 上传文件流，超过16M时将进行分片并通过多线程上传，每片大小16M，当有分片上传失败时终止上传

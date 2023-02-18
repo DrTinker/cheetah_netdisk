@@ -4,6 +4,7 @@ import (
 	"NetDisk/models"
 	"io"
 	"sync"
+	"time"
 )
 
 type COSClient interface {
@@ -19,6 +20,8 @@ type COSClient interface {
 	UploadPart(pos int, data []byte, key, uploadID string) (*models.Part, error)
 	// 删除
 	Delete(key string) error
+	// URL
+	GetPresignedUrl(fileKey string, expire time.Duration) (url string, err error)
 }
 
 var (
