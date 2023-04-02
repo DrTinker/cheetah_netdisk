@@ -1,3 +1,4 @@
 *.ini
 *_test.go
 *.txt
+*.md

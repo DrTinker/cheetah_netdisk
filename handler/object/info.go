@@ -3,6 +3,8 @@ package object
 import (
 	"NetDisk/client"
 	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,12 +39,23 @@ func GetFileListHandler(c *gin.Context) {
 		})
 		return
 	}
+	// 处理数据
+	show := make([]*models.UserFileShow, len(files))
+	for i, file := range files {
+		show[i] = &models.UserFileShow{}
+		show[i].Uuid = file.Uuid
+		show[i].User_Uuid = file.User_Uuid
+		show[i].Name = file.Name
+		show[i].Ext = file.Ext
+		show[i].CreatedAt = helper.TimeFormat(file.CreatedAt)
+		show[i].UpdatedAt = helper.TimeFormat(file.UpdatedAt)
+	}
 	// 返回数据
 	log.Info("GetFileListHandler success: ", folder_uuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code":      conf.SUCCESS_RESP_MESSAGE,
 		"msg":       conf.LIST_FILES_SUCCESS_MESSAGE,
-		"file_list": files,
+		"file_list": show,
 	})
 }
 

@@ -24,13 +24,22 @@ type UserFile struct { // userfile中的一条记录唯一对应用户存储空�
 	ID        uint   `gorm:"primaryKey" json:"-"`
 	Uuid      string // 前端可见的文件id
 	User_Uuid string // 用户uuid
-	Parent_Id int    // 父节点id，id为user_file表的id
-	File_Uuid string // file表中的uuid，用于索引，前端不可见
+	Parent_Id int    `json:"-"` // 父节点id，id为user_file表的id
+	File_Uuid string `json:"-"` // file表中的uuid，用于索引，前端不可见
 	Ext       string // 文件扩展名
 	Name      string // 文件名称
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+type UserFileShow struct {
+	Uuid      string // 前端可见的文件id
+	User_Uuid string // 用户uuid
+	Ext       string // 文件扩展名
+	Name      string // 文件名称
+	CreatedAt string
+	UpdatedAt string
 }
 
 type Part struct {

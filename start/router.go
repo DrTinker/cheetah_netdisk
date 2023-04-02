@@ -10,6 +10,8 @@ import (
 
 // 初始化路由
 func RegisterRouter(r *gin.Engine) {
+	// 解决跨域
+	r.Use(middleware.CORSHeader())
 	u := r.Group("/user")
 	{
 		u.GET("/login", middleware.JWT(false), user.LoginHandler)
@@ -31,4 +33,7 @@ func RegisterRouter(r *gin.Engine) {
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
 	}
+
+	// 无效路由，处理自定义header
+	r.NoRoute(middleware.CustomeHeader())
 }
