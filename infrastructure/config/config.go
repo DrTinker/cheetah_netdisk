@@ -15,6 +15,7 @@ type ConfigClientImpl struct {
 	Email  *models.EmailConfig
 	Cache  *models.CacheConfig
 	COS    *models.COSConfig
+	Local  *models.LocalConfig
 	source *ini.File
 }
 
@@ -114,4 +115,15 @@ func (c *ConfigClientImpl) GetCOSConfig() (*models.COSConfig, error) {
 	c.COS.Region = section.Key("region").String()
 
 	return c.COS, nil
+}
+
+func (c *ConfigClientImpl) GetLocalConfig() (*models.LocalConfig, error) {
+	//判断配置是否加载成功
+	if c.source == nil {
+		return nil, errors.New("empty cos config")
+	}
+	section := c.source.Section("Local")
+	c.Local.TmpPath = section.Key("tmppath").String()
+
+	return c.Local, nil
 }

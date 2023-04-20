@@ -14,7 +14,6 @@ import (
 func ExistCheck(mod int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取前端传入文件md5值
-		fileKey := c.PostForm(conf.File_Name_Key)
 		md5 := c.PostForm(conf.File_Hash_Key)
 		if md5 == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -25,7 +24,6 @@ func ExistCheck(mod int) gin.HandlerFunc {
 			return
 		}
 		// gin不能重复读取body
-		c.Set(conf.File_Name_Key, fileKey)
 		c.Set(conf.File_Hash_Key, md5)
 		c.Set(conf.File_Quick_Upload_Key, false)
 		// 通过数据库查询文件是否存在

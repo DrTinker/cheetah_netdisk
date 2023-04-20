@@ -62,10 +62,10 @@ func ArrayInGroupsOf(arr []byte, num int64) [][]byte {
 }
 
 // TODO 更加严格的路径有效性检测
-// 切分文件路径获取名称和扩展名，所有文件或文件夹至少为root/
+// 切分文件路径获取名称和扩展名
 func SplitFilePath(path string) (name, ext string, err error) {
 	// 判断空字符串，且必须有/
-	if len(path) == 0 || !strings.Contains(path, "/") || !strings.HasPrefix(path, conf.Default_System_Prefix) {
+	if len(path) == 0 || !strings.Contains(path, "/") {
 		return "", "", conf.FilePathError
 	}
 	// 判断时文件还是文件夹

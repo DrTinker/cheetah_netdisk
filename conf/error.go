@@ -21,3 +21,6 @@ var FilePathError = errors.New("Invaild file path")
 
 // 文件操作
 var NameRepeatError = errors.New("File name exist")
+
+// 文件删除
+var EmptyDeleteError = errors.New("No Such file to be deleted")

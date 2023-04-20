@@ -12,6 +12,7 @@ type ConfigClient interface {
 	GetEmailConfig() (*models.EmailConfig, error)
 	GetCacheConfig() (addr, pwd string, err error)
 	GetCOSConfig() (*models.COSConfig, error)
+	GetLocalConfig() (*models.LocalConfig, error)
 }
 
 var (

@@ -7,7 +7,7 @@ import (
 
 type DBClient interface {
 	// user
-	CreateUser(user *models.User) error
+	CreateUser(user *models.User, folder *models.UserFile) error
 
 	GetUserByID(id string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
@@ -23,7 +23,7 @@ type DBClient interface {
 	GetUserFileByUuid(uuid string) (file *models.UserFile, err error)
 	GetUserFileBatch(uuids []string) (files []*models.UserFile, err error)
 
-	DeleteUserFileByUuid(uuid string) error
+	DeleteUserFileByUuid(user_file_uuid, file_uuid string) error
 	DeleteUserFileBatch(uuids string) error
 
 	UpdateUserFileParent(src_id, des_parent_id int) error

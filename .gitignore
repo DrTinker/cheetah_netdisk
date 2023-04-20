@@ -2,3 +2,4 @@
 *_test.go
 *.txt
 *.md
+tmp/

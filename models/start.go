@@ -34,3 +34,7 @@ type COSConfig struct {
 	SecretId  string
 	SecretKey string
 }
+
+type LocalConfig struct {
+	TmpPath string
+}

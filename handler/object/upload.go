@@ -3,9 +3,9 @@ package object
 import (
 	"NetDisk/client"
 	"NetDisk/conf"
-	"NetDisk/handler/general"
 	"NetDisk/helper"
 	"NetDisk/models"
+	"NetDisk/service"
 	"fmt"
 	"net/http"
 
@@ -27,8 +27,19 @@ func UploadHandler(c *gin.Context) {
 		return
 	}
 	// 检查存在性的中间件已经读取过了，因此从ctx中获取
-	fileKey := c.GetString(conf.File_Name_Key)
 	hash := c.GetString(conf.File_Hash_Key)
+	// 文件夹名称
+	fileName := c.PostForm(conf.File_Name_Key)
+	name, ext, err := helper.SplitFileFullName(fileName)
+	if err != nil {
+		log.Error("UploadHandler invaild file name")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	fileKey := helper.GenFileKey(hash, ext)
 
 	// 前端传入uuid后端查询id
 	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
@@ -74,12 +85,14 @@ func UploadHandler(c *gin.Context) {
 	}
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
 	// 上传
-	err = general.UploadObjectServer(&models.UploadObjectParams{
+	err = service.UploadObjectServer(&models.UploadObjectParams{
 		FileKey:        fileKey,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,
 		Hash:           hash,
 		Size:           int(file.Size),
+		Name:           name,
+		Ext:            ext,
 		File_Uuid:      file_uuid,
 		User_File_Uuid: user_file_uuid,
 	}, fd, flag)

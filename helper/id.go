@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"NetDisk/conf"
 	"crypto/md5"
 	"fmt"
 
@@ -32,4 +33,9 @@ func GenUserFid(user, name string) string {
 	id := md5.Sum([]byte(str))
 
 	return fmt.Sprintf("%x", id)
+}
+
+// 生成fileKey
+func GenFileKey(hash, ext string) string {
+	return fmt.Sprintf("%s/%s.%s", conf.Default_System_Prefix, hash, ext)
 }

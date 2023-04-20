@@ -2,8 +2,8 @@ package object
 
 import (
 	"NetDisk/conf"
-	"NetDisk/handler/general"
 	"NetDisk/helper"
+	"NetDisk/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ func CopyFileHandler(c *gin.Context) {
 		return
 	}
 	// 复制
-	err := general.CopyObject(src, des)
+	err := service.CopyObject(src, des)
 	if err != nil {
 		log.Error("CopyHandler copy err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -54,7 +54,7 @@ func MoveFileHandler(c *gin.Context) {
 		return
 	}
 	// 移动
-	err := general.MoveObject(src, des)
+	err := service.MoveObject(src, des)
 	if err != nil {
 		log.Error("MoveFileHandler copy err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -70,6 +70,7 @@ func MoveFileHandler(c *gin.Context) {
 	})
 }
 
+// 仅涉及user_file表，不涉及cos
 func FileUpdateHandler(c *gin.Context) {
 	// 获取文件uuid user_file
 	user_file_uuid := c.PostForm(conf.File_Uuid_Key)
@@ -93,7 +94,7 @@ func FileUpdateHandler(c *gin.Context) {
 		return
 	}
 	// 仅更改名称
-	if err := general.UpdateObjectName(user_file_uuid, name, ext); err != nil {
+	if err := service.UpdateObjectName(user_file_uuid, name, ext); err != nil {
 		log.Error("FileUpdateHandler update err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.ERROR_UPDATE_NAME_CODE,
@@ -122,7 +123,7 @@ func FileDeleteHandler(c *gin.Context) {
 	}
 	// 删除数据库记录
 	// 判断file_pool中引用数，若未0则删除COS中文件
-	if err := general.DeleteObject(user_file_uuid); err != nil {
+	if err := service.DeleteObject(user_file_uuid); err != nil {
 		log.Error("FileDeleteHandler err: invaild file uuid")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.ERROR_DELETE_FILE_CODE,
@@ -132,7 +133,7 @@ func FileDeleteHandler(c *gin.Context) {
 	}
 	// 成功
 	log.Info("FileDeleteHandler success: ", user_file_uuid)
-	c.JSON(http.StatusBadRequest, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,
 	})

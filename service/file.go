@@ -1,9 +1,8 @@
-package general
+package service
 
 import (
 	"NetDisk/client"
 	"NetDisk/conf"
-	"NetDisk/helper"
 	"NetDisk/models"
 	"fmt"
 	"io"
@@ -11,13 +10,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO 抽象为service层
 // 服务端上传文件，flag为秒传标识
+// 文件仅在服务端磁盘缓存，缓存后直接向前端返回结果, 通过消息队列异步上传cos
 func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag bool) error {
 	fileKey := param.FileKey
 	user_uuid := param.User_Uuid
 	hash := param.Hash
 	size := param.Size
+	name := param.Name
+	ext := param.Ext
 	file_uuid := param.File_Uuid
 	user_file_uuid := param.User_File_Uuid
 
@@ -32,12 +33,6 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 			return errors.Wrap(err, "[UploadObject] get parent id error: ")
 		}
 		parentId = ids[user_file_uuid_parent]
-	}
-
-	// 从文件KEY中获取文件名称
-	name, ext, err := helper.SplitFilePath(fileKey)
-	if err != nil {
-		return errors.Wrap(err, "[UploadObject] split file key error: ")
 	}
 
 	// 拼装结构体
@@ -60,7 +55,7 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 	}
 	// 如果是秒传，只在user_file中插入记录
 	if flag {
-		err = client.GetDBClient().CreateUserFile(userFileDB)
+		err := client.GetDBClient().CreateUserFile(userFileDB)
 		if err != nil {
 			return errors.Wrap(err, "[UploadObject] store upload record error: ")
 		}
@@ -68,7 +63,7 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 	}
 	// 非秒传
 	// 上传COS
-	err = client.GetCOSClient().UploadStream(fileKey, fd)
+	err := client.GetCOSClient().UploadStream(fileKey, fd)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] upload cos error: ")
 	}
@@ -80,63 +75,18 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 	return nil
 }
 
-func UploadObjectClient(param *models.UploadObjectParams, flag bool) error {
-	fileKey := param.FileKey
-	user_uuid := param.User_Uuid
-	hash := param.Hash
-	size := param.Size
-	file_uuid := param.File_Uuid
-	user_file_uuid := param.User_File_Uuid
-
+func Mkdir(folder *models.UserFile, parent_uuid string) error {
 	// 获取父级文件夹ID
-	var parentId int
-	if param.Parent == "" {
-		parentId = conf.Default_System_parent
-	} else {
-		user_file_uuid_parent := param.Parent
-		ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{user_file_uuid_parent})
-		if err != nil || ids == nil {
-			return errors.Wrap(err, "[UploadObject] get parent id error: ")
-		}
-		parentId = ids[user_file_uuid_parent]
+	ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{parent_uuid})
+	if err != nil || ids == nil {
+		return errors.Wrap(err, "[Mkdir] get parent id error: ")
 	}
-
-	// 从文件KEY中获取文件名称
-	name, ext, err := helper.SplitFilePath(fileKey)
+	parentId := ids[parent_uuid]
+	folder.Parent_Id = parentId
+	// 插入记录
+	err = client.GetDBClient().CreateUserFile(folder)
 	if err != nil {
-		return errors.Wrap(err, "[UploadObject] split file key error: ")
-	}
-
-	// 拼装结构体
-	fileDB := &models.File{
-		Uuid: file_uuid,
-		Name: name,
-		Ext:  ext,
-		Path: fileKey,
-		Hash: hash,
-		Link: 1,
-		Size: size,
-	}
-	userFileDB := &models.UserFile{
-		Uuid:      user_file_uuid,
-		User_Uuid: user_uuid,
-		Parent_Id: parentId,
-		File_Uuid: file_uuid,
-		Name:      name,
-		Ext:       ext,
-	}
-	// 如果是秒传，只在user_file中插入记录
-	if flag {
-		err = client.GetDBClient().CreateUserFile(userFileDB)
-		if err != nil {
-			return errors.Wrap(err, "[UploadObject] store upload record error: ")
-		}
-		return nil
-	}
-	// 插入上传记录
-	err = client.GetDBClient().CreateUploadRecord(fileDB, userFileDB)
-	if err != nil {
-		return errors.Wrap(err, "[UploadObject] store upload record error: ")
+		return errors.Wrap(err, "[Mkdir] create user file record error: ")
 	}
 	return nil
 }
@@ -245,19 +195,33 @@ func DeleteObject(user_file_uuid string) error {
 		// 通过uuid获取id
 		uuids := []string{user_file_uuid}
 		ids, err := client.GetDBClient().GetUserFileIDByUuid(uuids)
-		if err != nil || len(ids) != 2 {
-			return errors.Wrap(err, "[CopyObject] get ids error: ")
+		if err != nil {
+			return errors.Wrap(err, "[DeleteObject] get ids error: ")
 		}
 		user_file_id := ids[user_file_uuid]
 		// 对每个文件执行删除
 		fList, err := client.GetDBClient().GetUserFileList(user_file_id)
 		if err != nil {
-			return errors.Wrap(err, "[CopyObject] get user file info error: ")
+			return errors.Wrap(err, "[DeleteObject] get user file info error: ")
 		}
 		for _, file := range fList {
+			// 文件夹处理
+			if file.Ext == conf.Folder_Default_EXT {
+				err = client.GetDBClient().DeleteUserFileByUuid(file.Uuid, file.File_Uuid)
+				if err != nil {
+					return errors.Wrap(err, "[DeleteObject] delete user file error: ")
+				}
+				continue
+			}
+			// 文件处理
 			if err := deleteHelper(file.Uuid, file.File_Uuid); err != nil {
 				return err
 			}
+		}
+		// 删除user_file中的文件夹记录
+		err = client.GetDBClient().DeleteUserFileByUuid(user_file_uuid, file_uuid)
+		if err != nil {
+			return errors.Wrap(err, "[DeleteObject] delete user file error: ")
 		}
 	} else {
 		// 是文件
@@ -276,7 +240,7 @@ func deleteHelper(user_file_uuid, file_uuid string) error {
 	}
 	// 不为0只删除user_file记录和修改引用数
 	if file.Link-1 != 0 {
-		if err := client.GetDBClient().DeleteUserFileByUuid(file_uuid); err != nil {
+		if err := client.GetDBClient().DeleteUserFileByUuid(user_file_uuid, file.Uuid); err != nil {
 			return errors.Wrap(err, "[DeleteObject] update link error: ")
 		}
 		return nil
