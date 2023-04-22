@@ -1,11 +1,11 @@
 package object
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/models"
-	"NetDisk/service"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
+	"NetDesk/service"
 	"fmt"
 	"net/http"
 

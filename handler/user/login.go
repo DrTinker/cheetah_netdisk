@@ -1,9 +1,9 @@
 package user
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/models"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/models"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"

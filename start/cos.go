@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDisk/client"
-	"NetDisk/infrastructure/cos"
+	"NetDesk/client"
+	"NetDesk/infrastructure/cos"
 )
 
 func InitCOS() {

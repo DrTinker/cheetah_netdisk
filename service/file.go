@@ -1,9 +1,11 @@
 package service
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/models"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -37,13 +39,14 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 
 	// 拼装结构体
 	fileDB := &models.File{
-		Uuid: file_uuid,
-		Name: name,
-		Ext:  ext,
-		Path: fileKey,
-		Hash: hash,
-		Link: 1,
-		Size: size,
+		Uuid:       file_uuid,
+		Name:       name,
+		Ext:        ext,
+		Path:       fileKey,
+		Hash:       hash,
+		Link:       1,
+		Store_Type: conf.Store_Type_Local,
+		Size:       size,
 	}
 	userFileDB := &models.UserFile{
 		Uuid:      user_file_uuid,
@@ -62,10 +65,39 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 		return nil
 	}
 	// 非秒传
-	// 上传COS
+	/*// 上传COS
 	err := client.GetCOSClient().UploadStream(fileKey, fd)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] upload cos error: ")
+	}*/
+	// 先保存本地，再写消息进入消息队列
+	cfg, err := client.GetConfigClient().GetLocalConfig()
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] get loacl config error: ")
+	}
+	path := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, hash, ext)
+	err = helper.WriteFile(path, fd)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] store file to local error: ")
+	}
+	// 写mq
+	data := &models.TransferMsg{
+		FileHash:  hash,
+		Src:       path,
+		Des:       fileKey,
+		StoreType: conf.Store_Type_COS,
+	}
+	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.Routing_Key)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
+	}
+	msg, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] parse msg error: ")
+	}
+	err = client.GetMQClient().Publish(setting, msg)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] publish msg error: ")
 	}
 	// 插入上传记录
 	err = client.GetDBClient().CreateUploadRecord(fileDB, userFileDB)
@@ -75,6 +107,7 @@ func UploadObjectServer(param *models.UploadObjectParams, fd io.Reader, flag boo
 	return nil
 }
 
+// 创建文件夹
 func Mkdir(folder *models.UserFile, parent_uuid string) error {
 	// 获取父级文件夹ID
 	ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{parent_uuid})
@@ -91,7 +124,6 @@ func Mkdir(folder *models.UserFile, parent_uuid string) error {
 	return nil
 }
 
-// mod: 0复制文件，1移动文件
 func CopyObject(src_uuid, des_parent_uuid string) error {
 	// 通过uuid获取id
 	uuids := []string{src_uuid, des_parent_uuid}
@@ -253,4 +285,11 @@ func deleteHelper(user_file_uuid, file_uuid string) error {
 		return errors.Wrap(err, "[DeleteObject] delete db record error: ")
 	}
 	return nil
+}
+
+// 分块上传
+// 初始化分块上传，返回UploadID并写入redis
+func InitUploadPart(hash string) string {
+	//
+	return ""
 }

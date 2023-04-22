@@ -1,9 +1,9 @@
 package user
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/helper"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
 	"fmt"
 	"net/http"
 

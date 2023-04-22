@@ -23,4 +23,7 @@ var FilePathError = errors.New("Invaild file path")
 var NameRepeatError = errors.New("File name exist")
 
 // 文件删除
-var EmptyDeleteError = errors.New("No Such file to be deleted")
+var EmptyDeleteError = errors.New("No such file to be deleted")
+
+// 文件异步上传cos
+var MQConnectionClosedError = errors.New("MQ connection has closed by error, please check")

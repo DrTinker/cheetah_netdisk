@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/models"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

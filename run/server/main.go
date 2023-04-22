@@ -1,8 +1,8 @@
 package main
 
 import (
-	"NetDisk/client"
-	"NetDisk/start"
+	"NetDesk/client"
+	"NetDesk/start"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,8 @@ func init() {
 	start.InitCache()  // 缓存
 	start.InitJWT()
 	start.InitMsg() // 邮件系统
-	start.InitCOS() //对象存储re
+	start.InitCOS() //对象存储
+	start.InitMQ()
 }
 
 func main() {

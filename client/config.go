@@ -1,7 +1,7 @@
 package client
 
 import (
-	"NetDisk/models"
+	"NetDesk/models"
 	"sync"
 )
 
@@ -13,6 +13,7 @@ type ConfigClient interface {
 	GetCacheConfig() (addr, pwd string, err error)
 	GetCOSConfig() (*models.COSConfig, error)
 	GetLocalConfig() (*models.LocalConfig, error)
+	GetMQConfig() (*models.MQConfig, error)
 }
 
 var (

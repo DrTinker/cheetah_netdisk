@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"NetDisk/client"
-	"NetDisk/conf"
+	"NetDesk/client"
+	"NetDesk/conf"
 )
 
 // 解析jwt，flag为true标识拦截不带token的请求

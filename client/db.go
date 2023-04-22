@@ -1,7 +1,7 @@
 package client
 
 import (
-	"NetDisk/models"
+	"NetDesk/models"
 	"sync"
 )
 
@@ -35,6 +35,7 @@ type DBClient interface {
 	GetFileByUuid(uuid string) (file *models.File, err error)
 
 	UpdateFileLink(uuid string, data int) error
+	UpdateFileStoreTypeByHash(hash string, t int) error
 
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)

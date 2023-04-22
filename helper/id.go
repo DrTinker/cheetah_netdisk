@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"NetDisk/conf"
+	"NetDesk/conf"
 	"crypto/md5"
 	"fmt"
 

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
+	"NetDesk/client"
+	"NetDesk/conf"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,4 +1,4 @@
-module NetDisk
+module NetDesk
 
 go 1.17
 
@@ -32,6 +32,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/streadway/amqp v1.0.0 // indirect
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41 // indirect
 	github.com/tencentyun/qcloud-cos-sts-sdk v0.0.0-20230131114744-664372c3c84d // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect

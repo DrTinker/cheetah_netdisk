@@ -42,6 +42,7 @@ const File_UUID_DB = "uuid"
 const File_Hash_DB = "hash"
 const File_Link_DB = "link"
 const File_Path_DB = "path"
+const File_Store_Type_DB = "store_type"
 const User_File_ID_DB = "id"
 const User_File_UUID_DB = "uuid"
 const User_File_Name_DB = "name"
@@ -66,7 +67,16 @@ const Folder_Default_Size = 1
 const Folder_Default_EXT = "folder"
 const File_Exist_Flag = "exist"
 
+// mq相关
+const Routing_Key = "cos"
+const Exchange = "cheetah_netdesk"
+const Transfer_COS_Queue = "cheetah_netdesk_trans_cos"
+const Transfer_COS_Queue_Err = "cheetah_netdesk_trans_cos_err"
+const Default_Content_Type = "text/plain"
+
 // 文件存储
 const Default_System_Prefix = "test"         // 文件系统根目录，未来替换为root
 const Default_System_parent = 0              // root对应ID
 const Default_Sign_Expire = time.Minute * 15 // 签名默认有效时间
+const Store_Type_COS = 0                     // 存储类型
+const Store_Type_Local = 1

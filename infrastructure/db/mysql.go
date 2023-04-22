@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/models"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
 )
 
 type DBClientImpl struct {
@@ -355,6 +355,16 @@ func (d *DBClientImpl) GetFileByUuid(uuid string) (file *models.File, err error)
 func (d *DBClientImpl) CreateUserFile(user_file *models.UserFile) error {
 	if err := d.DBConn.Table(conf.User_File_TB).Create(user_file).Error; err != nil {
 		return errors.Wrap(err, "[DBClientImpl] CreateUserFile err:")
+	}
+	return nil
+}
+
+// 更新文件存储类型
+func (d *DBClientImpl) UpdateFileStoreTypeByHash(hash string, t int) error {
+	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_Hash_DB+"=?", hash).
+		Update(conf.File_Store_Type_DB, t).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateFileStoreType err:")
 	}
 	return nil
 }

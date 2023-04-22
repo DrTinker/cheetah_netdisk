@@ -38,3 +38,12 @@ type COSConfig struct {
 type LocalConfig struct {
 	TmpPath string
 }
+
+// MQ连接配置
+type MQConfig struct {
+	Proto   string
+	User    string
+	Pwd     string
+	Address string
+	Port    int
+}

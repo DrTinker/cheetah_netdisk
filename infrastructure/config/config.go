@@ -1,8 +1,8 @@
 package config
 
 import (
-	"NetDisk/helper"
-	"NetDisk/models"
+	"NetDesk/helper"
+	"NetDesk/models"
 	"errors"
 	"fmt"
 
@@ -16,6 +16,7 @@ type ConfigClientImpl struct {
 	Cache  *models.CacheConfig
 	COS    *models.COSConfig
 	Local  *models.LocalConfig
+	MQ     *models.MQConfig
 	source *ini.File
 }
 
@@ -26,6 +27,8 @@ func NewConfigClientImpl() *ConfigClientImpl {
 		Email: &models.EmailConfig{},
 		Cache: &models.CacheConfig{},
 		COS:   &models.COSConfig{},
+		Local: &models.LocalConfig{},
+		MQ:    &models.MQConfig{},
 	}
 }
 
@@ -126,4 +129,19 @@ func (c *ConfigClientImpl) GetLocalConfig() (*models.LocalConfig, error) {
 	c.Local.TmpPath = section.Key("tmppath").String()
 
 	return c.Local, nil
+}
+
+func (c *ConfigClientImpl) GetMQConfig() (*models.MQConfig, error) {
+	//判断配置是否加载成功
+	if c.source == nil {
+		return nil, errors.New("empty mq config")
+	}
+
+	c.MQ.Address = c.source.Section("MQ").Key("address").MustString("127.0.0.1")
+	c.MQ.Pwd = c.source.Section("MQ").Key("pwd").MustString("guest")
+	c.MQ.Proto = c.source.Section("MQ").Key("proto").MustString("amqp")
+	c.MQ.User = c.source.Section("MQ").Key("user").MustString("guest")
+	c.MQ.Port = c.source.Section("MQ").Key("port").MustInt(5672)
+
+	return c.MQ, nil
 }

@@ -1,10 +1,10 @@
 package user
 
 import (
-	"NetDisk/client"
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/models"
+	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
 	"fmt"
 	"net/http"
 

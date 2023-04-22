@@ -1,8 +1,8 @@
 package client
 
 import (
-	"NetDisk/infrastructure/jwt"
-	"NetDisk/models"
+	"NetDesk/infrastructure/jwt"
+	"NetDesk/models"
 )
 
 type Encryption interface {

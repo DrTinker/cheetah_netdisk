@@ -3,9 +3,9 @@ package start
 import (
 	"github.com/gin-gonic/gin"
 
-	"NetDisk/handler/object"
-	"NetDisk/handler/user"
-	middleware "NetDisk/middleware"
+	"NetDesk/handler/object"
+	"NetDesk/handler/user"
+	middleware "NetDesk/middleware"
 )
 
 // 初始化路由

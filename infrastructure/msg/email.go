@@ -1,7 +1,7 @@
 package msg
 
 import (
-	"NetDisk/models"
+	"NetDesk/models"
 	"crypto/tls"
 	"net/smtp"
 	"strconv"

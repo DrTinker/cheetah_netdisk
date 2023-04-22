@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"NetDisk/conf"
+	"NetDesk/conf"
 	"math/rand"
 	"os"
 	"strings"

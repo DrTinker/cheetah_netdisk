@@ -1,9 +1,9 @@
 package cos
 
 import (
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/models"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/models"
 	"bytes"
 	"context"
 	"fmt"

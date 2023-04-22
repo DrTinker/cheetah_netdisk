@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"NetDisk/models"
+	"NetDesk/models"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"

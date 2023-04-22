@@ -1,9 +1,9 @@
 package object
 
 import (
-	"NetDisk/conf"
-	"NetDisk/helper"
-	"NetDisk/service"
+	"NetDesk/conf"
+	"NetDesk/helper"
+	"NetDesk/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
