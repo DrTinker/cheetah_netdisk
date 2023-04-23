@@ -3,6 +3,8 @@ package middleware
 import (
 	"NetDesk/client"
 	"NetDesk/conf"
+	"NetDesk/helper"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -54,6 +56,69 @@ func ExistCheck(mod int) gin.HandlerFunc {
 				c.Set(conf.File_Uuid_Key, uuid)
 				c.Set(conf.File_Quick_Upload_Key, true)
 			}
+		}
+		c.Next()
+	}
+}
+
+// 通过md5值检测客户端上传文件hash值是否合法
+func FileCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// gin获取文件
+		file, err := c.FormFile(conf.File_Form_Key)
+		if err != nil {
+			log.Error("UploadHandler err: ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.HTTP_INVALID_PARAMS_CODE,
+				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+			})
+			c.Abort()
+			return
+		}
+		// 读取文件
+		fd, err := file.Open()
+		if err != nil {
+			log.Error("UploadHandler file open err: ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.HTTP_INVALID_PARAMS_CODE,
+				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+			})
+			c.Abort()
+			return
+		}
+		data, err := ioutil.ReadAll(fd)
+		if err != nil {
+			log.Error("UploadHandler file open err: ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.HTTP_INVALID_PARAMS_CODE,
+				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+			})
+			c.Abort()
+			return
+		}
+		// 获取前端传入文件md5值
+		md5 := c.PostForm(conf.File_Hash_Key)
+		if md5 == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.ERROR_FILE_HASH_CODE,
+				"msg":  conf.FILE_HASH_INVAILD_MESSAGE,
+			})
+			c.Abort()
+			return
+		}
+		// gin不能重复读取body
+		c.Set(conf.File_Hash_Key, md5)
+		c.Set(conf.File_Form_Key, data)
+		// 比较md5值
+		hash := helper.CountMD5("", data, 1)
+		if hash != md5 {
+			log.Info("FileCheck middleware file md5 value invaild: ", md5)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.ERROR_FILE_EXIST_CODE,
+				"msg":  conf.FILE_EXIST_MESSAGE,
+			})
+			c.Abort()
+			return
 		}
 		c.Next()
 	}

@@ -9,6 +9,7 @@ const File_Form_Key = "files"
 const File_Hash_Key = "md5"
 const File_Uuid_Key = "uuid"
 const File_Name_Key = "name"
+const File_Size_Key = "size"
 const Folder_Path_Key = "path"
 const File_Path_Key = "path"
 const Folder_Uuid_Key = "parent_uuid"
@@ -16,3 +17,7 @@ const File_Parent_Key = "parent"
 const File_Src_Key = "src"            // 文件复制原地址
 const File_Des_Key = "des"            // 文件复制目的地址
 const File_Quick_Upload_Key = "quick" // 文件秒传标志
+
+// 分块上传
+const File_Chunk_Num_Key = "chunk_num"
+const File_Upload_ID_Key = "upload_id"

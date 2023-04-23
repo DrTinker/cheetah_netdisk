@@ -22,6 +22,7 @@ type DBClient interface {
 	GetUserFileByPath(path string) (file *models.UserFile, err error)
 	GetUserFileByUuid(uuid string) (file *models.UserFile, err error)
 	GetUserFileBatch(uuids []string) (files []*models.UserFile, err error)
+	GetUserByFileUuid(file_uuid string) (user_uuid string, err error)
 
 	DeleteUserFileByUuid(user_file_uuid, file_uuid string) error
 	DeleteUserFileBatch(uuids string) error

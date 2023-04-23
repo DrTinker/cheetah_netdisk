@@ -4,6 +4,7 @@ import (
 	"NetDesk/conf"
 	"crypto/md5"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -38,4 +39,9 @@ func GenUserFid(user, name string) string {
 // 生成fileKey
 func GenFileKey(hash, ext string) string {
 	return fmt.Sprintf("%s/%s.%s", conf.Default_System_Prefix, hash, ext)
+}
+
+// 生成uploadID
+func GenUploadID(user, hash string) string {
+	return fmt.Sprintf("UP_%s_%s_%d", user, hash, time.Now().UnixNano())
 }

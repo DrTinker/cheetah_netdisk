@@ -236,6 +236,16 @@ func (d *DBClientImpl) GetUserFileBatch(uuids []string) (files []*models.UserFil
 	return files, nil
 }
 
+func (d *DBClientImpl) GetUserByFileUuid(file_uuid string) (user_uuid string, err error) {
+	user_file := &models.UserFile{}
+	err = d.DBConn.Table(conf.User_File_TB).Where(conf.User_File_Pool_UUID_DB+"=?", file_uuid).
+		Select(conf.User_File_User_ID_DB).Find(user_file).Error
+	if err != nil {
+		return "", errors.Wrap(err, "[DBClientImpl] GetUserByFileUuid err:")
+	}
+	return user_file.User_Uuid, nil
+}
+
 // 在用户文件空间复制
 // TODO 处理文件夹复制
 func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error) {

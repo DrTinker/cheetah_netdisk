@@ -2,9 +2,11 @@ package service
 
 import (
 	"NetDesk/client"
+	"NetDesk/conf"
 	"NetDesk/models"
 	"encoding/json"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,4 +32,20 @@ func UploadConsumerMsg(msg []byte) bool {
 		return false
 	}
 	return true
+}
+
+func UploadProduceMsg(data *models.TransferMsg) error {
+	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.Routing_Key)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
+	}
+	msg, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] parse msg error: ")
+	}
+	err = client.GetMQClient().Publish(setting, msg)
+	if err != nil {
+		return errors.Wrap(err, "[UploadObject] publish msg error: ")
+	}
+	return nil
 }

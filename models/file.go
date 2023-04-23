@@ -63,3 +63,12 @@ type TransferMsg struct {
 	Des       string // cos filekey
 	StoreType int    // 0：cos 1：本地
 }
+
+// 分块上传结构体
+type UploadPartInfo struct {
+	FileHash   string // 文件哈希值
+	FileSize   int    // 文件总大小
+	UploadID   string // 上传ID唯一
+	ChunkSize  int    // 分块大小
+	ChunkCount int    // 分块数量
+}

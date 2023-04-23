@@ -2,6 +2,9 @@ package helper
 
 import (
 	"NetDesk/conf"
+	"crypto/md5"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -107,4 +110,20 @@ func SplitFileFullName(fullName string) (name string, ext string, err error) {
 	name = part[0]
 	ext = part[1]
 	return name, ext, nil
+}
+
+// 计算md5值
+// mod 0 读取path路径下的文件计算md5值；1 计算data的md5值
+func CountMD5(path string, data []byte, mod int) string {
+	if mod == 0 {
+		fd, err := os.Open(path)
+		if err != nil {
+			panic(err)
+		}
+		defer fd.Close()
+		data, _ := ioutil.ReadAll(fd)
+		return fmt.Sprintf("%x", md5.Sum(data))
+	} else {
+		return fmt.Sprintf("%x", md5.Sum(data))
+	}
 }

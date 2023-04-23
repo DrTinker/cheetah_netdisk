@@ -1,9 +1,9 @@
 package helper
 
 import (
-	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 // 打开本地文件
@@ -15,15 +15,40 @@ func OpenFile(filename string) (*os.File, error) {
 	return os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
 }
 
-func WriteFile(path string, data io.Reader) error {
-	body, err := ioutil.ReadAll(data)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(path, body, 0666) //写入文件(字节数组)
+func WriteFile(path string, data []byte) error {
+	// 文件存在时清空文件再写
+	err := ioutil.WriteFile(path, data, 0666) //写入文件(字节数组)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// 将src路径下的全部文件合成一个文件写入des
+// src example: /tmp/aaa/
+func MergeFile(src, des string) (*os.File, error) {
+	// 打开目标文件，不存在则创建
+	desFile, err := OpenFile(des)
+	if err != nil {
+		return nil, err
+	}
+	// 读取src路径下全部文件
+	files, err := filepath.Glob(src + "*")
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range files {
+		f, err := OpenFile(f)
+		if err != nil {
+			return nil, err
+		}
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+		desFile.Write(data)
+		f.Close()
+	}
+
+	return desFile, nil
 }

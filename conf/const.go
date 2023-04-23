@@ -44,6 +44,7 @@ const File_Link_DB = "link"
 const File_Path_DB = "path"
 const File_Store_Type_DB = "store_type"
 const User_File_ID_DB = "id"
+const User_File_User_ID_DB = "user_id"
 const User_File_UUID_DB = "uuid"
 const User_File_Name_DB = "name"
 const User_File_EXT_DB = "ext"
@@ -66,6 +67,17 @@ const Default_Thread_Pool_Size = 5
 const Folder_Default_Size = 1
 const Folder_Default_EXT = "folder"
 const File_Exist_Flag = "exist"
+
+// 分块上传
+const Upload_Part_Info_Key = "Upload_Info"      // 分块上传信息rediskey前缀
+const Upload_Part_Slice_Expire = time.Hour * 24 // 分块上传文件分块保存时间，用于断点续传
+const Upload_Part_Info_Hash_Key = "FileHash"    // 分块上传info map相关key
+const Upload_Part_Info_Size_Key = "FileSize"
+const Upload_Part_Info_ID_Key = "UploadID"
+const Upload_Part_Info_CSize_Key = "ChunkSize"
+const Upload_Part_Info_CCount_Key = "ChunkCount"
+const Upload_Part_File_Info_Key = "File_Info"
+const Uploac_Part_Info_Fileds = 6
 
 // mq相关
 const Routing_Key = "cos"
