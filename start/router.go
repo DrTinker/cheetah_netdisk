@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"NetDesk/handler/object"
+	"NetDesk/handler/share"
 	"NetDesk/handler/user"
 	middleware "NetDesk/middleware"
 )
@@ -33,6 +34,15 @@ func RegisterRouter(r *gin.Engine) {
 		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
+	}
+
+	// TODO 分享接口
+	s := r.Group("/share")
+	{
+		s.POST("/create", middleware.JWT(true), share.CreateShareHandler)
+		s.GET("/info", middleware.JWT(true), share.GetShareInfoHandler)
+		s.POST("/move", middleware.JWT(true), object.CopyFileHandler)
+		s.POST("/canacel", middleware.JWT(true), share.CancelShareHandler)
 	}
 
 	// 无效路由，处理自定义header

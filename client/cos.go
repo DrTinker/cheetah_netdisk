@@ -22,6 +22,8 @@ type COSClient interface {
 	Delete(key string) error
 	// URL
 	GetPresignedUrl(fileKey string, expire time.Duration) (url string, err error)
+	// 下载
+	DownloadLocal(fileKey, path string) error
 }
 
 var (

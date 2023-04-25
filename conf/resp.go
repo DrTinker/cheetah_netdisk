@@ -5,6 +5,9 @@ const SUCCESS_RESP_MESSAGE = "Success!"
 // 参数错误
 const HTTP_INVALID_PARAMS_MESSAGE = "invaild params"
 
+// 服务器内部错误
+const SERVER_ERROR_MSG = "Server internal error"
+
 // 登录
 const LOGIN_ERROR_MESSAGE = "ID or pwd error!"
 const JWT_ERROR_MESSAGE = "Token parse error!"
@@ -36,3 +39,7 @@ const GET_INFO_FAIL_MESSAGE = "Get file info error"
 const COPY_FILE_FAIL_MESSAGE = "Copy file error"
 const UPDATE_FILE_NAME_FAIL_MESSAGE = "Update name DB error"
 const DELETE_FILE_FAIL_MESSAGE = "Delete file DB error"
+
+// 分享
+const CREATE_SHARE_FAIL_MESSAGE = "Create share link error"
+const SHARE_EXPIRES_MSG = "The link expires "

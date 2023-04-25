@@ -114,8 +114,8 @@ func FileCheck() gin.HandlerFunc {
 		if hash != md5 {
 			log.Info("FileCheck middleware file md5 value invaild: ", md5)
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code": conf.ERROR_FILE_EXIST_CODE,
-				"msg":  conf.FILE_EXIST_MESSAGE,
+				"code": conf.ERROR_FILE_HASH_CODE,
+				"msg":  conf.FILE_CHECK_ERROR_MESSAGE,
 			})
 			c.Abort()
 			return

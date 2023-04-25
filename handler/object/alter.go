@@ -23,8 +23,21 @@ func CopyFileHandler(c *gin.Context) {
 		})
 		return
 	}
+	// 获取用户ID
+	var user_uuid string
+	if idstr, f := c.Get(conf.User_ID); f {
+		user_uuid = helper.Strval(idstr)
+	}
+	if user_uuid == "" {
+		log.Error("CopyFileHandler uuid empty")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
 	// 复制
-	err := service.CopyObject(src, des)
+	err := service.CopyObject(src, des, user_uuid)
 	if err != nil {
 		log.Error("CopyHandler copy err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

@@ -142,6 +142,18 @@ func (c *COSClientImpl) GetPresignedUrl(fileKey string, expire time.Duration) (u
 	return presignedURL.RequestURI(), err
 }
 
+// 下载COS文件至服务端磁盘
+func (c *COSClientImpl) DownloadLocal(fileKey, path string) error {
+	opt := &cos.MultiDownloadOptions{
+		ThreadPoolSize: conf.Default_Thread_Pool_Size,
+	}
+	_, err := c.COSClient.Object.Download(context.Background(), fileKey, path, opt)
+	if err != nil {
+		return errors.Wrap(err, "[COSClientImpl] DownloadLocal error: ")
+	}
+	return nil
+}
+
 // 上传文件流，超过16M时将进行分片并通过多线程上传，每片大小16M，当有分片上传失败时终止上传
 // 弃用
 func (c *COSClientImpl) UpLoadStreamPart(key string, stream io.Reader, opts *models.MultiFileUploadOptions) error {

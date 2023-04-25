@@ -27,6 +27,8 @@ func EmailVerifyHandler(c *gin.Context) {
 	to := c.Query(conf.User_Email)
 	// 生成验证码
 	code := helper.GenRandCode()
+	// TODO 修改redis key
+	// TODO 判断邮箱是否已经被注册
 	err = client.GetCacheClient().SetWithExpire(conf.Code_Cache_Key, code, conf.Code_Expire)
 	if err != nil {
 		log.Error("EmailVerifyHandler err: %+v", err)

@@ -15,6 +15,8 @@ type DBClient interface {
 
 	// user_file
 	CreateUserFile(user_file *models.UserFile) error
+	CreateQuickUploadRecord(userFile *models.UserFile, size int) error
+	CheckUserFileExist(user_uuid, file_uuid string) (bool, error)
 
 	GetUserFileList(parent_id int) (files []*models.UserFile, err error)
 	GetUserFileParent(uuid string) (file *models.UserFile, err error)
@@ -22,6 +24,8 @@ type DBClient interface {
 	GetUserFileByPath(path string) (file *models.UserFile, err error)
 	GetUserFileByUuid(uuid string) (file *models.UserFile, err error)
 	GetUserFileBatch(uuids []string) (files []*models.UserFile, err error)
+
+	GetFileUuidByUserFileUuid(user_file_uuid string) (file_uuid string, err error)
 	GetUserByFileUuid(file_uuid string) (user_uuid string, err error)
 
 	DeleteUserFileByUuid(user_file_uuid, file_uuid string) error
@@ -37,6 +41,14 @@ type DBClient interface {
 
 	UpdateFileLink(uuid string, data int) error
 	UpdateFileStoreTypeByHash(hash string, t int) error
+
+	// share
+	CreateShare(share *models.Share) error
+	CreateShareBatch(shares []*models.Share) error
+
+	GetShareByUuid(uuid string) (*models.Share, error)
+
+	DeleteShareByUuid(uuid string) error
 
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)

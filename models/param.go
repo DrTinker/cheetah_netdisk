@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type MultiFileUploadOptions struct {
 	ThreadPoolSize int // 使用线程数
 	PartSize       int
@@ -25,4 +27,13 @@ type UploadPartResult struct {
 	UploadID   string
 	ChunkCount int   // 总计分片数
 	ChunkList  []int // 断点续传，已经上传的分片列表
+}
+
+// 创建分享链接参数
+type CreateShareParams struct {
+	Share_Uuid     string
+	User_Uuid      string
+	User_File_Uuid string
+	Code           string
+	Expire         time.Time
 }

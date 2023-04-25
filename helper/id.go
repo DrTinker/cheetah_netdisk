@@ -45,3 +45,12 @@ func GenFileKey(hash, ext string) string {
 func GenUploadID(user, hash string) string {
 	return fmt.Sprintf("UP_%s_%s_%d", user, hash, time.Now().UnixNano())
 }
+
+// 生成share uuid
+func GenSid(user, code string) string {
+	u := uuid.NewV4()
+	str := u.String() + user + code
+	id := md5.Sum([]byte(str))
+
+	return fmt.Sprintf("%x", id)
+}

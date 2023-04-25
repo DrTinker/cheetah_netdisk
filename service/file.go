@@ -32,12 +32,13 @@ func QuickUpload(param *models.UploadObjectParams) (bool, error) {
 	}
 	// 存在则触发秒传逻辑
 	// 检查是否为同一个人上传同一个文件
-	user, err := client.GetDBClient().GetUserByFileUuid(file_uuid)
+	user_flag, err := client.GetDBClient().CheckUserFileExist(file_uuid, user_uuid)
 	if err != nil {
 		return false, errors.Wrap(err, "[QuickUpload] get db data error: ")
 	}
-	if user == user_uuid {
-		return true, conf.FileExistError
+	// 已经在该用户空间存在时应该走复制接口
+	if user_flag {
+		return false, conf.FileExistError
 	}
 	// 获取父级文件夹ID
 	var parentId int
@@ -62,7 +63,7 @@ func QuickUpload(param *models.UploadObjectParams) (bool, error) {
 		Ext:       ext,
 	}
 	// 秒传只写user_file表
-	err = client.GetDBClient().CreateUserFile(userFileDB)
+	err = client.GetDBClient().CreateQuickUploadRecord(userFileDB, param.Size)
 	if err != nil {
 		return true, errors.Wrap(err, "[UploadFileByStream] store upload record error: ")
 	}
@@ -222,7 +223,9 @@ func Mkdir(folder *models.UserFile, parent_uuid string) error {
 	return nil
 }
 
-func CopyObject(src_uuid, des_parent_uuid string) error {
+// 用于复制和分享
+// user_uuid用于区分同用户复制和通过分享链接保存
+func CopyObject(src_uuid, des_parent_uuid, user_uuid string) error {
 	// 通过uuid获取id
 	uuids := []string{src_uuid, des_parent_uuid}
 	ids, err := client.GetDBClient().GetUserFileIDByUuid(uuids)
@@ -236,6 +239,8 @@ func CopyObject(src_uuid, des_parent_uuid string) error {
 	if err != nil || user_file == nil {
 		return errors.Wrap(err, "[CopyObject] get user file info error: ")
 	}
+	// 修改user_uuid
+	user_file.User_Uuid = user_uuid
 	ext := user_file.Ext
 	// 如果是文件夹
 	if ext == conf.Folder_Default_EXT {
@@ -249,7 +254,6 @@ func CopyObject(src_uuid, des_parent_uuid string) error {
 			return errors.Wrap(err, "[CopyObject] copy folder error: ")
 		}
 		// 复制文件夹下所有文件
-		// TODO 引入mq实现异步传输
 		for _, f := range fList {
 			if _, err := client.GetDBClient().CopyUserFile(f, new_des_id); err != nil {
 				return errors.Wrap(err, fmt.Sprintf("[CopyObject] copy file: %s, err: ", f.Uuid))
