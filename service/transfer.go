@@ -3,6 +3,7 @@ package service
 import (
 	"NetDesk/client"
 	"NetDesk/conf"
+	"NetDesk/helper"
 	"NetDesk/models"
 	"encoding/json"
 
@@ -16,21 +17,28 @@ func UploadConsumerMsg(msg []byte) bool {
 	data := &models.TransferMsg{}
 	err := json.Unmarshal(msg, data)
 	if err != nil {
-		log.Error("[UploadConsumerMsg] parse msg error: %v", err)
+		log.Error("[UploadConsumerMsg] parse msg error: ", err)
 		return false
 	}
 	// 根据msg读取本地文件上传cos
 	err = client.GetCOSClient().UpLoadLocalFile(data.Des, data.Src)
 	if err != nil {
-		log.Error("[UploadConsumerMsg] upload cos error: %v", err)
+		log.Error("[UploadConsumerMsg] upload cos error: ", err)
 		return false
 	}
 	// 修改数据表
 	err = client.GetDBClient().UpdateFileStoreTypeByHash(data.FileHash, data.StoreType)
 	if err != nil {
-		log.Error("[UploadConsumerMsg] update db error: %v", err)
+		log.Error("[UploadConsumerMsg] update db error: ", err)
 		return false
 	}
+	// 删除tmp下文件
+	err = helper.DelFile(data.Src, 0)
+	if err != nil {
+		log.Error("[UploadConsumerMsg] remove tmp file error: ", err)
+		return false
+	}
+	log.Info("[UploadConsumerMsg] transfer file ", data.Src, " success")
 	return true
 }
 
@@ -47,5 +55,6 @@ func UploadProduceMsg(data *models.TransferMsg) error {
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] publish msg error: ")
 	}
+	log.Info("[UploadProduceMsg] send msg ", data.Src, " success")
 	return nil
 }

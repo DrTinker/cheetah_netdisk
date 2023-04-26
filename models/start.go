@@ -36,7 +36,8 @@ type COSConfig struct {
 }
 
 type LocalConfig struct {
-	TmpPath string
+	TmpPath  string
+	FilePath string
 }
 
 // MQ连接配置

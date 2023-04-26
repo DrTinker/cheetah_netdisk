@@ -33,6 +33,7 @@ func RegisterRouter(r *gin.Engine) {
 		o.GET("/info/path", middleware.JWT(true), object.GetFileInfoByPathHandler)
 		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
+		o.GET("/download/total", middleware.JWT(true), object.DownloadFileHandler)
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
 	}
 

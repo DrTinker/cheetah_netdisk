@@ -103,7 +103,7 @@ func UploadFileByStream(param *models.UploadObjectParams, data []byte) error {
 		Path:       fileKey,
 		Hash:       hash,
 		Link:       1,
-		Store_Type: conf.Store_Type_Local,
+		Store_Type: conf.Store_Type_Tmp,
 		Size:       size,
 	}
 	userFileDB := &models.UserFile{
@@ -176,7 +176,7 @@ func UploadFileByPath(param *models.UploadObjectParams, path string) error {
 		Path:       fileKey,
 		Hash:       hash,
 		Link:       1,
-		Store_Type: conf.Store_Type_Local,
+		Store_Type: conf.Store_Type_Tmp,
 		Size:       size,
 	}
 	userFileDB := &models.UserFile{
@@ -512,4 +512,30 @@ func CompleteUploadPart(uploadID string) (*models.UploadObjectParams, string, er
 		return nil, "", conf.InvaildFileHashError
 	}
 	return param, des, nil
+}
+
+// 下载至tmp
+func DownloadToTmp(user_file_uuid string) (string, error) {
+	// 通过uuid查询文件信息
+	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(user_file_uuid)
+	if err != nil {
+		return "", err
+	}
+	// 切分fileKey获取hash&ext
+	hash, ext, err := helper.SplitFilePath(fileKey)
+	if err != nil {
+		return "", errors.Wrap(err, "[DownloadFile] parse fileKey err ")
+	}
+	// 通过fileKey从COS下载文件
+	cfg, err := client.GetConfigClient().GetLocalConfig()
+	if err != nil {
+		return "", errors.Wrap(err, "[DownloadFile] get config err ")
+	}
+	path := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, hash, ext)
+	err = client.GetCOSClient().DownloadLocal(fileKey, path)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }

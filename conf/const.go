@@ -94,4 +94,5 @@ const Default_System_Prefix = "test"         // 文件系统根目录，未来�
 const Default_System_parent = 0              // root对应ID
 const Default_Sign_Expire = time.Minute * 15 // 签名默认有效时间
 const Store_Type_COS = 0                     // 存储类型
-const Store_Type_Local = 1
+const Store_Type_Tmp = 1                     // 临时存储
+const Store_Type_Local = 2

@@ -421,6 +421,23 @@ func (d *DBClientImpl) GetFileByUuid(uuid string) (file *models.File, err error)
 	return file, nil
 }
 
+// 通过user_file_uuid获取fileKey
+func (d *DBClientImpl) GetFileKeyByUserFileUuid(uuid string) (fileKey string, err error) {
+	file := &models.File{}
+	// 拼接sql
+	ft := conf.File_Pool_TB
+	fid := conf.File_UUID_DB
+	uft := conf.User_File_TB
+	ufid := conf.User_File_Pool_UUID_DB
+	// select "path" from "file_pool" inner join "user_file" on ("user_file".file_uuid = "file_pool".uuid) where "user_file".uuid = uuid
+	err = d.DBConn.Table(conf.File_Pool_TB).Joins(fmt.Sprintf("inner join %s on %s.%s = %s.%s", uft, ft, fid, uft, ufid)).
+		Where(fmt.Sprintf("%s.%s=?", uft, conf.User_File_UUID_DB), uuid).Select(conf.File_Path_DB).First(file).Error
+	if err != nil {
+		return "", errors.Wrap(err, "[DBClientImpl] GetUserFileByPath err:")
+	}
+	return file.Path, nil
+}
+
 func (d *DBClientImpl) CreateUserFile(user_file *models.UserFile) error {
 	if err := d.DBConn.Table(conf.User_File_TB).Create(user_file).Error; err != nil {
 		return errors.Wrap(err, "[DBClientImpl] CreateUserFile err:")

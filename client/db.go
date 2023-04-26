@@ -38,6 +38,7 @@ type DBClient interface {
 	CheckFileExist(hash string) (bool, string, error)
 	GetFileLink(uuid string) (link int, err error)
 	GetFileByUuid(uuid string) (file *models.File, err error)
+	GetFileKeyByUserFileUuid(uuid string) (fileKey string, err error)
 
 	UpdateFileLink(uuid string, data int) error
 	UpdateFileStoreTypeByHash(hash string, t int) error

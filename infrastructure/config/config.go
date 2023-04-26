@@ -127,6 +127,7 @@ func (c *ConfigClientImpl) GetLocalConfig() (*models.LocalConfig, error) {
 	}
 	section := c.source.Section("Local")
 	c.Local.TmpPath = section.Key("tmppath").String()
+	c.Local.FilePath = section.Key("filepath").String()
 
 	return c.Local, nil
 }

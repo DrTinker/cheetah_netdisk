@@ -24,6 +24,21 @@ func WriteFile(path string, data []byte) error {
 	return nil
 }
 
+// 删除文件
+// mod 0: 文件 1: 文件夹
+func DelFile(path string, mod int) error {
+	var err error
+	switch mod {
+	case 0:
+		err = os.Remove(path)
+	case 1:
+		err = os.RemoveAll(path)
+	default:
+		break
+	}
+	return err
+}
+
 // 将src路径下的全部文件合成一个文件写入des
 // src example: /tmp/aaa/
 func MergeFile(src, des string) (*os.File, error) {
