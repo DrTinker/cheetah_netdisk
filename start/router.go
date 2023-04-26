@@ -41,8 +41,8 @@ func RegisterRouter(r *gin.Engine) {
 	{
 		s.POST("/create", middleware.JWT(true), share.CreateShareHandler)
 		s.GET("/info", middleware.JWT(true), share.GetShareInfoHandler)
-		s.POST("/move", middleware.JWT(true), object.CopyFileHandler)
-		s.POST("/canacel", middleware.JWT(true), share.CancelShareHandler)
+		s.POST("/copy", middleware.JWT(true), share.CopyFileByShareHandler)
+		s.POST("/cancel", middleware.JWT(true), share.CancelShareHandler)
 	}
 
 	// 无效路由，处理自定义header

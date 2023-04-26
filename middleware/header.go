@@ -27,7 +27,7 @@ func CustomeHeader() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"code": conf.HTTP_SUCCESS_CODE,
-			"msg":  conf.SUCCESS_RESP_MESSAGE,
+			"msg":  conf.SUCCESS_NOROUTER_MSG,
 		})
 	}
 }

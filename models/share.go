@@ -17,5 +17,5 @@ type Share struct {
 	Click_Num      int       // 点击数
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	DeletedAt      gorm.DeletedAt `gorm:"index"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
 }

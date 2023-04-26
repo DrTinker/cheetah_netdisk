@@ -47,8 +47,11 @@ type DBClient interface {
 	CreateShareBatch(shares []*models.Share) error
 
 	GetShareByUuid(uuid string) (*models.Share, error)
+	GetUserFileUuidByShareUuid(uuid string) (user_file_uuid string, err error)
 
 	DeleteShareByUuid(uuid string) error
+
+	UpdateClickNumByUuid(uuid string) error
 
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)

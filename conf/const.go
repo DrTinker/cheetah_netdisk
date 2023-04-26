@@ -8,7 +8,7 @@ const HttpServer = "HttpServer"
 
 // jwt
 const JWTKeyValue = "cheetah_net_disk"
-const JWTExpireValue = 36000
+const JWTExpireValue = 3600000
 const JWTFlag = "jwt_flag"        // 标识本次登录是否携带JWT
 const JWTClaims = "jwt_claims"    // 存储jwt的声明字段
 const JWTHeader = "Authorization" // jwt请求头标识字段
@@ -51,6 +51,8 @@ const User_File_EXT_DB = "ext"
 const User_File_Parent_DB = "parent_id"
 const User_File_Pool_UUID_DB = "file_uuid"
 const Share_UUID_DB = "uuid"
+const Share_User_File_UUID_DB = "user_file_uuid"
+const Share_Click_Num_DB = "click_num"
 
 // 邮件
 const Email_Verify_MSG = "Cheetah Net Desk验证码"

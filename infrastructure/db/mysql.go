@@ -307,7 +307,6 @@ func (d *DBClientImpl) GetFileUuidByUserFileUuid(user_file_uuid string) (file_uu
 }
 
 // 在用户文件空间复制
-// TODO 处理文件夹复制
 func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error) {
 	// 生成新id, uuid和parentId
 	copy_file := &models.UserFile{
@@ -462,17 +461,43 @@ func (d *DBClientImpl) GetShareByUuid(uuid string) (*models.Share, error) {
 	share := &models.Share{}
 	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB).First(share).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, conf.DBDeleteError
+		}
 		return nil, errors.Wrap(err, "[DBClientImpl] GetShareByUuid err:")
 	}
 	return share, nil
 }
 
+// 获取user_file_uuid
+func (d *DBClientImpl) GetUserFileUuidByShareUuid(uuid string) (user_file_uuid string, err error) {
+	share := &models.Share{}
+	err = d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB).Select(conf.Share_User_File_UUID_DB).First(share).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", conf.DBDeleteError
+		}
+		return "", errors.Wrap(err, "[DBClientImpl] GetShareByUuid err:")
+	}
+	return share.User_File_Uuid, nil
+}
+
 // 删除share
 func (d *DBClientImpl) DeleteShareByUuid(uuid string) error {
 	share := &models.Share{}
-	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB).Delete(share).Error
+	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB+"=?", uuid).Delete(share).Error
 	if err != nil {
 		return errors.Wrap(err, "[DBClientImpl] DeleteShareByUuid err:")
+	}
+	return nil
+}
+
+// TODO 修改clickNum
+func (d *DBClientImpl) UpdateClickNumByUuid(uuid string) error {
+	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB+"=?", uuid).
+		Update(conf.Share_Click_Num_DB, gorm.Expr(conf.Share_Click_Num_DB+"+?", 1)).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateClickNumByUuid Update click err:")
 	}
 	return nil
 }

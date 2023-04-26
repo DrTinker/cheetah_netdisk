@@ -5,7 +5,7 @@ import (
 	"NetDesk/models"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // 创建链接
@@ -19,7 +19,7 @@ func CreateShareLink(param *models.CreateShareParams) error {
 	// 通过user_file_uuid查询file_uuid
 	file_uuid, err := client.GetDBClient().GetFileUuidByUserFileUuid(user_file_uuid)
 	if err != nil {
-		return errors.Wrap(err, "[CreateShareLink] get file uuid error: ")
+		return err
 	}
 	// 封装结构体
 	shareInfo := &models.Share{
@@ -34,7 +34,7 @@ func CreateShareLink(param *models.CreateShareParams) error {
 	// 存数据库
 	err = client.GetDBClient().CreateShare(shareInfo)
 	if err != nil {
-		return errors.Wrap(err, "[CreateShareLink] create share record error: ")
+		return err
 	}
 
 	return nil
@@ -45,22 +45,41 @@ func GetShareInfo(share_uuid string) (info *models.Share, time_out bool, err err
 	// 通过uuid查询share信息
 	info, err = client.GetDBClient().GetShareByUuid(share_uuid)
 	if err != nil {
-		return nil, false, errors.Wrap(err, "[GetShareInfo] get share info error: ")
+		return nil, false, err
 	}
 	// 检查过期时间
 	now := time.Now()
 	if info.Expire_Time.Before(now) {
 		return info, true, nil
 	}
+	// 增加点击数，不像上层传递错误
+	err = client.GetDBClient().UpdateClickNumByUuid(share_uuid)
+	if err != nil {
+		logrus.Warn("[GetShareInfo] increase click err: ", share_uuid)
+	}
 	// 未过期返回
 	return info, false, nil
+}
+
+// 通过分享获取文件
+func CopyFileByShare(share_uuid, des_uuid, user_uuid string) error {
+	// 通过share_uuid获取user_file_uuid
+	src_uuid, err := client.GetDBClient().GetUserFileUuidByShareUuid(share_uuid)
+	if err != nil {
+		return err
+	}
+	err = CopyObject(src_uuid, des_uuid, user_uuid)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 取消分享
 func CancelShare(share_uuid string) error {
 	err := client.GetDBClient().DeleteShareByUuid(share_uuid)
 	if err != nil {
-		return errors.Wrap(err, "[CancelShare] delete share record error: ")
+		return err
 	}
 
 	return nil

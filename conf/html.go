@@ -24,6 +24,6 @@ const File_Upload_ID_Key = "upload_id"
 
 // 分享
 const Share_User_File_Uuid = "file_uuid"
-const Share_Uuid = "uuid"
+const Share_Uuid = "share_uuid"
 const Share_Code = "code"
 const Share_Expire_Time = "expire_at"

@@ -23,6 +23,14 @@ func GetShareInfoHandler(c *gin.Context) {
 	}
 	// 查询数据库
 	info, time_out, err := service.GetShareInfo(share_uuid)
+	if err == conf.DBNotFoundError {
+		log.Warn("GetShareInfoHandler record not found", share_uuid)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.RECORD_DELETED_MSG,
+		})
+		return
+	}
 	if err != nil {
 		log.Error("GetShareInfoHandler get info error ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

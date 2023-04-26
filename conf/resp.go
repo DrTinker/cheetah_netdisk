@@ -1,12 +1,16 @@
 package conf
 
 const SUCCESS_RESP_MESSAGE = "Success!"
+const SUCCESS_NOROUTER_MSG = "No router!"
 
 // 参数错误
 const HTTP_INVALID_PARAMS_MESSAGE = "invaild params"
 
 // 服务器内部错误
 const SERVER_ERROR_MSG = "Server internal error"
+
+// 数据相关
+const RECORD_DELETED_MSG = "Such record has been deleted"
 
 // 登录
 const LOGIN_ERROR_MESSAGE = "ID or pwd error!"
