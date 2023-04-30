@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
+	"NetDesk/common/client"
+	"NetDesk/common/conf"
+	"NetDesk/common/helper"
 	"io/ioutil"
 	"net/http"
 

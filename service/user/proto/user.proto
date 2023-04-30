@@ -1,0 +1,49 @@
+syntax = "proto3"; // 指定proto版本
+package user;     // 指定默认包名
+
+option go_package = "/user";
+
+service UserService {
+    rpc UserSignUp(UserSignUpReq) returns (UserSignUpResp) {}
+    rpc UserSignIn(UserSignInReq) returns (UserSignInResp) {}
+}
+
+message RespBody {
+    int32 code = 1;
+    string resp_msg = 2;
+}
+
+message User {
+    int64 id = 1;
+    string uuid = 2;
+    string name = 3;
+    string password = 4;
+    string email = 5;
+    string phone = 6;
+    int32 level = 7; // 用户类型 0: 普通用户， 1：VIP用户， 2：特权用户
+    string start_uuid = 8; // 用户文件空间根目录的user_file_uuid
+    int64 now_volume = 9;
+    int64 total_volume = 10;
+}
+
+// 用户注册
+message UserSignUpReq {
+    User user_info = 1;
+    string code = 2;
+}
+
+message UserSignUpResp {
+    string user_uuid = 1;
+    RespBody resp = 2;
+}
+
+// 用户登录
+message UserSignInReq {
+    string email = 1;
+    string password = 2;
+}
+
+message UserSignInResp {
+    User user_info = 1;
+    RespBody resp = 2;
+}
