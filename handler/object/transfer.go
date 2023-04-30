@@ -3,7 +3,7 @@ package object
 import (
 	"NetDesk/common/client"
 	"NetDesk/common/conf"
-	service "NetDesk/service1"
+	service "NetDesk/service_old"
 
 	"github.com/sirupsen/logrus"
 )

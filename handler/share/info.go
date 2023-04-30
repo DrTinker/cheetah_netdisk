@@ -2,7 +2,7 @@ package share
 
 import (
 	"NetDesk/common/conf"
-	service "NetDesk/service1"
+	service "NetDesk/service_old"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
