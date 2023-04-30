@@ -1,10 +1,10 @@
 package share
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
-	"NetDesk/service"
+	"NetDesk/common/conf"
+	"NetDesk/common/helper"
+	"NetDesk/common/models"
+	"NetDesk/service1"
 	"net/http"
 	"time"
 

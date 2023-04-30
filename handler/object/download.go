@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/service"
+	"NetDesk/common/client"
+	"NetDesk/common/conf"
+	"NetDesk/common/helper"
+	service "NetDesk/service1"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"

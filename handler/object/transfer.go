@@ -1,9 +1,9 @@
 package object
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/service"
+	"NetDesk/common/client"
+	"NetDesk/common/conf"
+	service "NetDesk/service1"
 
 	"github.com/sirupsen/logrus"
 )

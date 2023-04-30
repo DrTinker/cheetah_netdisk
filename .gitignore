@@ -2,4 +2,5 @@
 *_test.go
 *.txt
 *.md
+*.vscode
 Local storage/

@@ -1,8 +1,8 @@
 package share
 
 import (
-	"NetDesk/conf"
-	"NetDesk/service"
+	"NetDesk/common/conf"
+	"NetDesk/service1"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,0 +1,22 @@
+syntax = "proto3"; // 指定proto版本
+package notice;     // 指定默认包名
+
+option go_package = "/notice";
+
+service Noticeservice {
+    rpc SendSignUpEmail(SendSignUpEmailReq) returns (SendSignUpEmailResp) {}
+}
+
+message RespBody {
+    int32 code = 1;
+    string resp_msg = 2;
+}
+
+// 发送注册验证码邮件
+message SendSignUpEmailReq {
+    string user_email = 1;
+}
+
+message SendSignUpEmailResp {
+    RespBody resp = 1;
+}

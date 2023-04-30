@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
-	"NetDesk/service"
+	"NetDesk/common/conf"
+	"NetDesk/common/helper"
+	"NetDesk/common/models"
+	service "NetDesk/service1"
 	"fmt"
 	"net/http"
 	"strconv"
