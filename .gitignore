@@ -1,0 +1,5 @@
+*.ini
+*_test.go
+*.txt
+*.md
+Local storage/
