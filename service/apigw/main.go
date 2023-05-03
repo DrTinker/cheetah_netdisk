@@ -2,10 +2,12 @@ package main
 
 import (
 	"NetDesk/common/client"
+	"NetDesk/common/helper"
 	"NetDesk/common/start"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"NetDesk/handler/object"
 	"NetDesk/handler/share"
@@ -77,6 +79,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	id := helper.GenServiceID("ApiGW", cfg.Port)
+	logrus.Info("[ApiGW] service id: ", id)
 
+	// 注册到 Consul，包含地址、端口信息，以及健康检查
+	err = client.GetDiscoveryClient().RegisterService("ApiGW", id, cfg.Address, cfg.Port)
+	if err != nil {
+		logrus.Error("[ApiGW] ServiceRegister err: ", err)
+	}
+	// keepalive
+	go func() {
+		client.GetDiscoveryClient().KeepAlive(id)
+	}()
+	// run会阻塞，应在run前注册consul
 	r.Run(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port))
 }

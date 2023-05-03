@@ -77,7 +77,7 @@ func SignUpHandler(c *gin.Context) {
 	user := &models.User{}
 	err := c.ShouldBind(&user)
 	if err != nil {
-		log.Error("RegisterHandler err: ", err)
+		log.Error("SignUpHandler err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -99,7 +99,7 @@ func SignUpHandler(c *gin.Context) {
 	code := c.Query(conf.Code_Param_Key)
 	resp, err := l.UserSignUp(user, code)
 	if err != nil {
-		log.Error("SignInHandler err: ", err)
+		log.Error("SignUpHandler err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -108,7 +108,7 @@ func SignUpHandler(c *gin.Context) {
 	}
 
 	// 返回成功
-	log.Info("RegisterHandler success: ", resp.UserUuid)
+	log.Info("SignUpHandler success: ", resp.UserUuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    resp.Resp.Code,
 		"msg":     resp.Resp.RespMsg,

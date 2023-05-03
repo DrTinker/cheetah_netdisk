@@ -12,7 +12,7 @@ type CacheClient interface {
 	// string
 	Get(key string) (res string, err error)
 	Set(key string, val interface{}) error
-	SetNX(key string, val interface{}, expire time.Duration) error
+	SetNX(key string, val interface{}, expire time.Duration) (bool, error)
 	SetWithExpire(key string, val interface{}, expire time.Duration) error
 	DelBatch(keys string) (num int64, err error)
 	// hset

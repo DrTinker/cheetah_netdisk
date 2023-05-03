@@ -19,6 +19,7 @@ func init() {
 	start.InitConfig() // 加载配置
 	start.InitDB()     // 数据库
 	start.InitDiscoveryClient()
+	start.InitCache()
 }
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		logrus.Error("[Userservice] failed to listen: ", err)
 	}
 
-	id := helper.GenServiceID("Userservice", port)
+	id := helper.GenServiceID("Userservice", *port)
 	logrus.Info("[Userservice] service id: ", id)
 
 	// 注册到 Consul，包含地址、端口信息，以及健康检查

@@ -3,11 +3,11 @@ package helper
 import (
 	"NetDesk/common/conf"
 	"fmt"
-	"time"
 )
 
-func GenEmailVerifyKey(user string) string {
-	return fmt.Sprintf("%s_%s_%d", conf.Code_Cache_Key, user, time.Now().UnixNano())
+// 生成验证码rediskey
+func GenVerifyCodeKey(prefix, email string) string {
+	return fmt.Sprintf("%s_%s", prefix, email)
 }
 
 func GenUploadPartInfoKey(id string) string {

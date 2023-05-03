@@ -58,15 +58,10 @@ func GenSid(user, code string) string {
 }
 
 // 生成服务全局id
-func GenServiceID(service string, port *int) string {
+func GenServiceID(service string, port int) string {
 	var h [16]byte
 	rand.Read(h[:])
 	// 生成一个全局ID
-	id := fmt.Sprintf("%s-%s-%d", service, hex.EncodeToString(h[:]), *port)
+	id := fmt.Sprintf("%s-%s-%d", service, hex.EncodeToString(h[:]), port)
 	return id
-}
-
-// 生成验证码rediskey
-func GenVerifyCodeKey(prefix, email string) string {
-	return fmt.Sprintf("%s_%s", prefix, email)
 }

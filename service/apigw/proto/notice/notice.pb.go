@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.9.0
-// source: notice.proto
+// source: service/notice/proto/notice.proto
 
 package notice
 
@@ -36,7 +36,7 @@ type RespBody struct {
 func (x *RespBody) Reset() {
 	*x = RespBody{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_notice_proto_msgTypes[0]
+		mi := &file_service_notice_proto_notice_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -49,7 +49,7 @@ func (x *RespBody) String() string {
 func (*RespBody) ProtoMessage() {}
 
 func (x *RespBody) ProtoReflect() protoreflect.Message {
-	mi := &file_notice_proto_msgTypes[0]
+	mi := &file_service_notice_proto_notice_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *RespBody) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RespBody.ProtoReflect.Descriptor instead.
 func (*RespBody) Descriptor() ([]byte, []int) {
-	return file_notice_proto_rawDescGZIP(), []int{0}
+	return file_service_notice_proto_notice_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *RespBody) GetCode() int32 {
@@ -80,31 +80,32 @@ func (x *RespBody) GetRespMsg() string {
 }
 
 // 发送注册验证码邮件
-type SendSignUpEmailReq struct {
+type SendEmailReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	UserEmail string `protobuf:"bytes,1,opt,name=user_email,json=userEmail,proto3" json:"user_email,omitempty"`
+	Content   string `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 }
 
-func (x *SendSignUpEmailReq) Reset() {
-	*x = SendSignUpEmailReq{}
+func (x *SendEmailReq) Reset() {
+	*x = SendEmailReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_notice_proto_msgTypes[1]
+		mi := &file_service_notice_proto_notice_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *SendSignUpEmailReq) String() string {
+func (x *SendEmailReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SendSignUpEmailReq) ProtoMessage() {}
+func (*SendEmailReq) ProtoMessage() {}
 
-func (x *SendSignUpEmailReq) ProtoReflect() protoreflect.Message {
-	mi := &file_notice_proto_msgTypes[1]
+func (x *SendEmailReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_notice_proto_notice_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,19 +116,26 @@ func (x *SendSignUpEmailReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SendSignUpEmailReq.ProtoReflect.Descriptor instead.
-func (*SendSignUpEmailReq) Descriptor() ([]byte, []int) {
-	return file_notice_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use SendEmailReq.ProtoReflect.Descriptor instead.
+func (*SendEmailReq) Descriptor() ([]byte, []int) {
+	return file_service_notice_proto_notice_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SendSignUpEmailReq) GetUserEmail() string {
+func (x *SendEmailReq) GetUserEmail() string {
 	if x != nil {
 		return x.UserEmail
 	}
 	return ""
 }
 
-type SendSignUpEmailResp struct {
+func (x *SendEmailReq) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type SendEmailResp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -135,23 +143,23 @@ type SendSignUpEmailResp struct {
 	Resp *RespBody `protobuf:"bytes,1,opt,name=resp,proto3" json:"resp,omitempty"`
 }
 
-func (x *SendSignUpEmailResp) Reset() {
-	*x = SendSignUpEmailResp{}
+func (x *SendEmailResp) Reset() {
+	*x = SendEmailResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_notice_proto_msgTypes[2]
+		mi := &file_service_notice_proto_notice_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *SendSignUpEmailResp) String() string {
+func (x *SendEmailResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SendSignUpEmailResp) ProtoMessage() {}
+func (*SendEmailResp) ProtoMessage() {}
 
-func (x *SendSignUpEmailResp) ProtoReflect() protoreflect.Message {
-	mi := &file_notice_proto_msgTypes[2]
+func (x *SendEmailResp) ProtoReflect() protoreflect.Message {
+	mi := &file_service_notice_proto_notice_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -162,65 +170,66 @@ func (x *SendSignUpEmailResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SendSignUpEmailResp.ProtoReflect.Descriptor instead.
-func (*SendSignUpEmailResp) Descriptor() ([]byte, []int) {
-	return file_notice_proto_rawDescGZIP(), []int{2}
+// Deprecated: Use SendEmailResp.ProtoReflect.Descriptor instead.
+func (*SendEmailResp) Descriptor() ([]byte, []int) {
+	return file_service_notice_proto_notice_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *SendSignUpEmailResp) GetResp() *RespBody {
+func (x *SendEmailResp) GetResp() *RespBody {
 	if x != nil {
 		return x.Resp
 	}
 	return nil
 }
 
-var File_notice_proto protoreflect.FileDescriptor
+var File_service_notice_proto_notice_proto protoreflect.FileDescriptor
 
-var file_notice_proto_rawDesc = []byte{
-	0x0a, 0x0c, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06,
-	0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x22, 0x39, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x70, 0x42, 0x6f,
-	0x64, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05,
-	0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x5f, 0x6d,
-	0x73, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x73, 0x70, 0x4d, 0x73,
-	0x67, 0x22, 0x33, 0x0a, 0x12, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x45,
-	0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x71, 0x12, 0x1d, 0x0a, 0x0a, 0x75, 0x73, 0x65, 0x72, 0x5f,
-	0x65, 0x6d, 0x61, 0x69, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x75, 0x73, 0x65,
-	0x72, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x22, 0x3b, 0x0a, 0x13, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x69,
-	0x67, 0x6e, 0x55, 0x70, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x12, 0x24, 0x0a,
-	0x04, 0x72, 0x65, 0x73, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x6e, 0x6f,
-	0x74, 0x69, 0x63, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x42, 0x6f, 0x64, 0x79, 0x52, 0x04, 0x72,
-	0x65, 0x73, 0x70, 0x32, 0x5d, 0x0a, 0x0d, 0x4e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x73, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x12, 0x4c, 0x0a, 0x0f, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x69, 0x67, 0x6e,
-	0x55, 0x70, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x12, 0x1a, 0x2e, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65,
-	0x2e, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x45, 0x6d, 0x61, 0x69, 0x6c,
-	0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x2e, 0x53, 0x65, 0x6e,
-	0x64, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70,
-	0x22, 0x00, 0x42, 0x09, 0x5a, 0x07, 0x2f, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_service_notice_proto_notice_proto_rawDesc = []byte{
+	0x0a, 0x21, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x22, 0x39, 0x0a, 0x08, 0x52,
+	0x65, 0x73, 0x70, 0x42, 0x6f, 0x64, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x72,
+	0x65, 0x73, 0x70, 0x5f, 0x6d, 0x73, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72,
+	0x65, 0x73, 0x70, 0x4d, 0x73, 0x67, 0x22, 0x47, 0x0a, 0x0c, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6d,
+	0x61, 0x69, 0x6c, 0x52, 0x65, 0x71, 0x12, 0x1d, 0x0a, 0x0a, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x65,
+	0x6d, 0x61, 0x69, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x75, 0x73, 0x65, 0x72,
+	0x45, 0x6d, 0x61, 0x69, 0x6c, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22,
+	0x35, 0x0a, 0x0d, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73, 0x70,
+	0x12, 0x24, 0x0a, 0x04, 0x72, 0x65, 0x73, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10,
+	0x2e, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x42, 0x6f, 0x64, 0x79,
+	0x52, 0x04, 0x72, 0x65, 0x73, 0x70, 0x32, 0x4b, 0x0a, 0x0d, 0x4e, 0x6f, 0x74, 0x69, 0x63, 0x65,
+	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x09, 0x53, 0x65, 0x6e, 0x64, 0x45,
+	0x6d, 0x61, 0x69, 0x6c, 0x12, 0x14, 0x2e, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x2e, 0x53, 0x65,
+	0x6e, 0x64, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x71, 0x1a, 0x15, 0x2e, 0x6e, 0x6f, 0x74,
+	0x69, 0x63, 0x65, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x73,
+	0x70, 0x22, 0x00, 0x42, 0x09, 0x5a, 0x07, 0x2f, 0x6e, 0x6f, 0x74, 0x69, 0x63, 0x65, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_notice_proto_rawDescOnce sync.Once
-	file_notice_proto_rawDescData = file_notice_proto_rawDesc
+	file_service_notice_proto_notice_proto_rawDescOnce sync.Once
+	file_service_notice_proto_notice_proto_rawDescData = file_service_notice_proto_notice_proto_rawDesc
 )
 
-func file_notice_proto_rawDescGZIP() []byte {
-	file_notice_proto_rawDescOnce.Do(func() {
-		file_notice_proto_rawDescData = protoimpl.X.CompressGZIP(file_notice_proto_rawDescData)
+func file_service_notice_proto_notice_proto_rawDescGZIP() []byte {
+	file_service_notice_proto_notice_proto_rawDescOnce.Do(func() {
+		file_service_notice_proto_notice_proto_rawDescData = protoimpl.X.CompressGZIP(file_service_notice_proto_notice_proto_rawDescData)
 	})
-	return file_notice_proto_rawDescData
+	return file_service_notice_proto_notice_proto_rawDescData
 }
 
-var file_notice_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_notice_proto_goTypes = []interface{}{
-	(*RespBody)(nil),            // 0: notice.RespBody
-	(*SendSignUpEmailReq)(nil),  // 1: notice.SendSignUpEmailReq
-	(*SendSignUpEmailResp)(nil), // 2: notice.SendSignUpEmailResp
+var file_service_notice_proto_notice_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_service_notice_proto_notice_proto_goTypes = []interface{}{
+	(*RespBody)(nil),      // 0: notice.RespBody
+	(*SendEmailReq)(nil),  // 1: notice.SendEmailReq
+	(*SendEmailResp)(nil), // 2: notice.SendEmailResp
 }
-var file_notice_proto_depIdxs = []int32{
-	0, // 0: notice.SendSignUpEmailResp.resp:type_name -> notice.RespBody
-	1, // 1: notice.Noticeservice.SendSignUpEmail:input_type -> notice.SendSignUpEmailReq
-	2, // 2: notice.Noticeservice.SendSignUpEmail:output_type -> notice.SendSignUpEmailResp
+var file_service_notice_proto_notice_proto_depIdxs = []int32{
+	0, // 0: notice.SendEmailResp.resp:type_name -> notice.RespBody
+	1, // 1: notice.Noticeservice.SendEmail:input_type -> notice.SendEmailReq
+	2, // 2: notice.Noticeservice.SendEmail:output_type -> notice.SendEmailResp
 	2, // [2:3] is the sub-list for method output_type
 	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -228,13 +237,13 @@ var file_notice_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_notice_proto_init() }
-func file_notice_proto_init() {
-	if File_notice_proto != nil {
+func init() { file_service_notice_proto_notice_proto_init() }
+func file_service_notice_proto_notice_proto_init() {
+	if File_service_notice_proto_notice_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_notice_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_service_notice_proto_notice_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RespBody); i {
 			case 0:
 				return &v.state
@@ -246,8 +255,8 @@ func file_notice_proto_init() {
 				return nil
 			}
 		}
-		file_notice_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SendSignUpEmailReq); i {
+		file_service_notice_proto_notice_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SendEmailReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -258,8 +267,8 @@ func file_notice_proto_init() {
 				return nil
 			}
 		}
-		file_notice_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SendSignUpEmailResp); i {
+		file_service_notice_proto_notice_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SendEmailResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -275,20 +284,20 @@ func file_notice_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_notice_proto_rawDesc,
+			RawDescriptor: file_service_notice_proto_notice_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_notice_proto_goTypes,
-		DependencyIndexes: file_notice_proto_depIdxs,
-		MessageInfos:      file_notice_proto_msgTypes,
+		GoTypes:           file_service_notice_proto_notice_proto_goTypes,
+		DependencyIndexes: file_service_notice_proto_notice_proto_depIdxs,
+		MessageInfos:      file_service_notice_proto_notice_proto_msgTypes,
 	}.Build()
-	File_notice_proto = out.File
-	file_notice_proto_rawDesc = nil
-	file_notice_proto_goTypes = nil
-	file_notice_proto_depIdxs = nil
+	File_service_notice_proto_notice_proto = out.File
+	file_service_notice_proto_notice_proto_rawDesc = nil
+	file_service_notice_proto_notice_proto_goTypes = nil
+	file_service_notice_proto_notice_proto_depIdxs = nil
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -303,7 +312,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type NoticeserviceClient interface {
-	SendSignUpEmail(ctx context.Context, in *SendSignUpEmailReq, opts ...grpc.CallOption) (*SendSignUpEmailResp, error)
+	SendEmail(ctx context.Context, in *SendEmailReq, opts ...grpc.CallOption) (*SendEmailResp, error)
 }
 
 type noticeserviceClient struct {
@@ -314,9 +323,9 @@ func NewNoticeserviceClient(cc grpc.ClientConnInterface) NoticeserviceClient {
 	return &noticeserviceClient{cc}
 }
 
-func (c *noticeserviceClient) SendSignUpEmail(ctx context.Context, in *SendSignUpEmailReq, opts ...grpc.CallOption) (*SendSignUpEmailResp, error) {
-	out := new(SendSignUpEmailResp)
-	err := c.cc.Invoke(ctx, "/notice.Noticeservice/SendSignUpEmail", in, out, opts...)
+func (c *noticeserviceClient) SendEmail(ctx context.Context, in *SendEmailReq, opts ...grpc.CallOption) (*SendEmailResp, error) {
+	out := new(SendEmailResp)
+	err := c.cc.Invoke(ctx, "/notice.Noticeservice/SendEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -325,35 +334,35 @@ func (c *noticeserviceClient) SendSignUpEmail(ctx context.Context, in *SendSignU
 
 // NoticeserviceServer is the server API for Noticeservice service.
 type NoticeserviceServer interface {
-	SendSignUpEmail(context.Context, *SendSignUpEmailReq) (*SendSignUpEmailResp, error)
+	SendEmail(context.Context, *SendEmailReq) (*SendEmailResp, error)
 }
 
 // UnimplementedNoticeserviceServer can be embedded to have forward compatible implementations.
 type UnimplementedNoticeserviceServer struct {
 }
 
-func (*UnimplementedNoticeserviceServer) SendSignUpEmail(context.Context, *SendSignUpEmailReq) (*SendSignUpEmailResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendSignUpEmail not implemented")
+func (*UnimplementedNoticeserviceServer) SendEmail(context.Context, *SendEmailReq) (*SendEmailResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendEmail not implemented")
 }
 
 func RegisterNoticeserviceServer(s *grpc.Server, srv NoticeserviceServer) {
 	s.RegisterService(&_Noticeservice_serviceDesc, srv)
 }
 
-func _Noticeservice_SendSignUpEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendSignUpEmailReq)
+func _Noticeservice_SendEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendEmailReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NoticeserviceServer).SendSignUpEmail(ctx, in)
+		return srv.(NoticeserviceServer).SendEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/notice.Noticeservice/SendSignUpEmail",
+		FullMethod: "/notice.Noticeservice/SendEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NoticeserviceServer).SendSignUpEmail(ctx, req.(*SendSignUpEmailReq))
+		return srv.(NoticeserviceServer).SendEmail(ctx, req.(*SendEmailReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -363,10 +372,10 @@ var _Noticeservice_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*NoticeserviceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendSignUpEmail",
-			Handler:    _Noticeservice_SendSignUpEmail_Handler,
+			MethodName: "SendEmail",
+			Handler:    _Noticeservice_SendEmail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "notice.proto",
+	Metadata: "service/notice/proto/notice.proto",
 }

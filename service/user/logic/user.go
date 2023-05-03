@@ -90,12 +90,13 @@ func (u *UserLogic) SignUpLogic(req *user.UserSignUpReq) (*user.UserSignUpResp, 
 				Code:    conf.ERROR_REGISTER_CODE,
 				RespMsg: conf.REGISTER_REPEAT_MESSAGE,
 			},
-		}, errors.Wrap(conf.UserEmailExistError, "[UserService] SignUpLogic ")
+		}, nil
 	}
 
 	// 判断验证码是否有效
 	src := req.GetCode()
-	code, err := client.GetCacheClient().Get(conf.Code_Cache_Key)
+	key := helper.GenVerifyCodeKey(conf.Code_Cache_Key, user_info.Email)
+	code, err := client.GetCacheClient().Get(key)
 	if err != nil || code == "" || src != code {
 		return &user.UserSignUpResp{
 			UserUuid: "",
@@ -108,7 +109,7 @@ func (u *UserLogic) SignUpLogic(req *user.UserSignUpReq) (*user.UserSignUpResp, 
 	// 生成用户ID
 	id := helper.GenUid(user_info.Name, user_info.Email)
 	// 生成用户空间根目录uuid
-	folderName := fmt.Sprintf("%s-%s", user_info.Name, user_info.Uuid)
+	folderName := fmt.Sprintf("%s-%s", user_info.Name, id)
 	user_file_uuid := helper.GenUserFid(user_info.Uuid, folderName)
 	// 生成用户db结构
 	user_db := &models.User{
@@ -145,7 +146,7 @@ func (u *UserLogic) SignUpLogic(req *user.UserSignUpReq) (*user.UserSignUpResp, 
 
 	// 返回成功
 	return &user.UserSignUpResp{
-		UserUuid: user_info.Uuid,
+		UserUuid: id,
 		Resp: &user.RespBody{
 			Code:    conf.RPC_SUCCESS_CODE,
 			RespMsg: conf.SUCCESS_RESP_MESSAGE,

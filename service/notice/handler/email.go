@@ -13,11 +13,11 @@ type noticeService struct{}
 
 var NoticeService = noticeService{}
 
-func (n noticeService) SendSignUpEmail(ctx context.Context, req *notice.SendSignUpEmailReq) (*notice.SendSignUpEmailResp, error) {
+func (n noticeService) SendEmail(ctx context.Context, req *notice.SendEmailReq) (*notice.SendEmailResp, error) {
 	// 校验参数
-	if req.GetUserEmail() == "" {
+	if req.GetUserEmail() == "" || req.GetContent() == "" {
 		logrus.Error("[NoticeService] SendSignUpEmailHandler empty email ", req)
-		return &notice.SendSignUpEmailResp{
+		return &notice.SendEmailResp{
 			Resp: &notice.RespBody{
 				Code:    conf.HTTP_INVALID_PARAMS_CODE,
 				RespMsg: conf.HTTP_INVALID_PARAMS_MESSAGE,

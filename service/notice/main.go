@@ -17,14 +17,15 @@ import (
 // 初始化
 func init() {
 	start.InitConfig() // 加载配置
-	start.InitDB()     // 数据库
 	start.InitDiscoveryClient()
+	start.InitCache()
+	start.InitMsg()
 }
 
 func main() {
 	// 读取命令行参数
 	host := flag.String("h", "127.0.0.1", "host")
-	port := flag.Int("p", 50051, "port")
+	port := flag.Int("p", 50052, "port")
 	flag.Parse()
 
 	lis, err := net.Listen("tcp", net.JoinHostPort(*host, strconv.Itoa(*port)))
@@ -32,7 +33,7 @@ func main() {
 		logrus.Error("[Noticeservice] failed to listen: ", err)
 	}
 
-	id := helper.GenServiceID("Noticeservice", port)
+	id := helper.GenServiceID("Noticeservice", *port)
 	logrus.Info("[Noticeservice] service id: ", id)
 
 	// 注册到 Consul，包含地址、端口信息，以及健康检查

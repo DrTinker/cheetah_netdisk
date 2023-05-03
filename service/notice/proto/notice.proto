@@ -4,7 +4,7 @@ package notice;     // 指定默认包名
 option go_package = "/notice";
 
 service Noticeservice {
-    rpc SendSignUpEmail(SendSignUpEmailReq) returns (SendSignUpEmailResp) {}
+    rpc SendEmail(SendEmailReq) returns (SendEmailResp) {}
 }
 
 message RespBody {
@@ -13,10 +13,11 @@ message RespBody {
 }
 
 // 发送注册验证码邮件
-message SendSignUpEmailReq {
+message SendEmailReq {
     string user_email = 1;
+    string content = 2;
 }
 
-message SendSignUpEmailResp {
+message SendEmailResp {
     RespBody resp = 1;
 }
