@@ -27,15 +27,26 @@ func EmailVerifyHandler(c *gin.Context) {
 	to := c.Query(conf.User_Email)
 	// 生成验证码
 	code := helper.GenRandCode()
-	// TODO 修改redis key
-	// TODO 判断邮箱是否已经被注册
-	err = client.GetCacheClient().SetWithExpire(conf.Code_Cache_Key, code, conf.Code_Expire)
+	// 生成rediskey
+	key := helper.GenVerifyCodeKey(conf.Code_Cache_Key, to)
+	// 上一个验证码过期后才能set
+	flag, err := client.GetCacheClient().SetNX(key, code, conf.Code_Expire)
 	if err != nil {
 		log.Error("EmailVerifyHandler err: %+v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.ERROR_VERIFY_CODE,
 			"msg":  conf.VERIFY_CODE_GEN_ERROR_MESSAGE,
 		})
+		return
+	}
+	// key存在
+	if !flag {
+		log.Warn("EmailVerifyHandler code exist")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.ERROR_VERIFY_CODE,
+			"msg":  conf.VERIFY_CODE_GEN_ERROR_MESSAGE,
+		})
+		return
 	}
 	// 发送邮件
 	content := fmt.Sprintf(conf.Email_Verify_Page, code)

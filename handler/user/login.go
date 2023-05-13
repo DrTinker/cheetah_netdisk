@@ -52,6 +52,7 @@ func LoginHandler(c *gin.Context) {
 			"code": conf.ERROR_LOGIN_CODE,
 			"msg":  conf.LOGIN_ERROR_MESSAGE,
 		})
+		return
 	}
 
 	// 未携带jwt则为初次登录
