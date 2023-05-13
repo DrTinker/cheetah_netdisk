@@ -43,12 +43,18 @@ func (c *CacheClientImpl) Get(key string) (res string, err error) {
 }
 
 // string set
-func (c *CacheClientImpl) Set(key, val string) error {
+func (c *CacheClientImpl) Set(key string, val interface{}) error {
 	return c.CacheClient.Set(key, val, 0).Err()
 }
 
+// string setnx
+func (c *CacheClientImpl) SetNX(key string, val interface{}, expire time.Duration) (bool, error) {
+	ret := c.CacheClient.SetNX(key, val, expire)
+	return ret.Val(), ret.Err()
+}
+
 // string set with expire
-func (c *CacheClientImpl) SetWithExpire(key, val string, expire time.Duration) error {
+func (c *CacheClientImpl) SetWithExpire(key string, val interface{}, expire time.Duration) error {
 	return c.CacheClient.Set(key, val, expire).Err()
 }
 
