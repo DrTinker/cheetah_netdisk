@@ -35,6 +35,11 @@ func RegisterRouter(r *gin.Engine) {
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
 		o.GET("/download/total", middleware.JWT(true), object.DownloadFileHandler)
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
+
+		// batch
+		o.POST("/batch/copy", middleware.JWT(true), object.CopyFileBatchHandler)
+		o.POST("/batch/move", middleware.JWT(true), object.MoveFileBatchHandler)
+		o.POST("/batch/delete", middleware.JWT(true), object.DeleteFileBatchHandler)
 	}
 
 	// TODO 分享接口

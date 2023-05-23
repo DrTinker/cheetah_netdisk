@@ -72,3 +72,9 @@ type UploadPartInfo struct {
 	ChunkSize  int    // 分块大小
 	ChunkCount int    // 分块数量
 }
+
+// 批量操作参数
+type BatchTaskInfo struct {
+	Des string   // 目标文件夹uuid
+	Src []string // 要操作文件uuid列表
+}

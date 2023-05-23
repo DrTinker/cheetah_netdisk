@@ -7,18 +7,25 @@ import (
 
 type DBClient interface {
 	// user
+	// 创建用户
 	CreateUser(user *models.User, folder *models.UserFile) error
-
+	// 通过uuid获取用户信息
 	GetUserByID(id string) (*models.User, error)
+	// 通过email获取用户
 	GetUserByEmail(email string) (*models.User, error)
+	// 通过uuid获取用户空间大小
 	GetUserVolume(id string) (now, total int64, err error)
 
 	// user_file
+	// 创建用户文件
 	CreateUserFile(user_file *models.UserFile) error
+	// 创建秒传记录
 	CreateQuickUploadRecord(userFile *models.UserFile, size int) error
+	// 查询用户文件是否存在
 	CheckUserFileExist(user_uuid, file_uuid string) (bool, error)
 
 	GetUserFileList(parent_id int) (files []*models.UserFile, err error)
+	GetUserFileListPage(parent_id int, cur, pageSize int, ext string) (files []*models.UserFile, err error)
 	GetUserFileParent(uuid string) (file *models.UserFile, err error)
 	GetUserFileIDByUuid(uuids []string) (ids map[string]int, err error)
 	GetUserFileByPath(path string) (file *models.UserFile, err error)

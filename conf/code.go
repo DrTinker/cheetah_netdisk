@@ -35,6 +35,9 @@ const FILE_EXIST_CODE = 22007       // 同一个用户上传相同文件
 // 分片上传
 const ERROR_UPLOAD_PART_INIT_CODE = 22004 // 初始化
 
+// 获取文件列表
+const ERROR_INVAILD_PAGE_CODE = 22005 // 给定页数超过最大页数
+
 // 文件系统
 const ERROR_LIST_FILES_CODE = 23000
 const ERROR_GET_INFO_CODE = 23001

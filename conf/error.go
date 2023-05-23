@@ -8,6 +8,7 @@ var DBInsertError = errors.New("DB insert error")
 var DBDeleteError = errors.New("DB delete error")
 var DBUpdateError = errors.New("DB update error")
 var DBNotFoundError = errors.New("DB not found error")
+var DBPageOutOfRangeError = errors.New("The given page out of range")
 
 // 数据处理错误
 var JsonError = errors.New("JSON parse error")

@@ -228,6 +228,25 @@ func (d *DBClientImpl) GetUserFileList(parent_id int) (files []*models.UserFile,
 	return
 }
 
+// 分页获取文件列表
+func (d *DBClientImpl) GetUserFileListPage(parent_id int, cur, pageSize int, ext string) (files []*models.UserFile, err error) {
+
+	var findMode *models.UserFile
+	if ext == "" {
+		findMode = &models.UserFile{Parent_Id: parent_id}
+	} else {
+		findMode = &models.UserFile{Parent_Id: parent_id, Ext: ext}
+	}
+
+	// limit + offset实现分页查询
+	err = d.DBConn.Table(conf.User_File_TB).Where(findMode).
+		Limit(pageSize).Offset((cur - 1) * pageSize).Find(&files).Error
+	if files == nil || err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetUserFileListPage err:")
+	}
+	return
+}
+
 // 通过文件uuid获取id
 func (d *DBClientImpl) GetUserFileIDByUuid(uuids []string) (ids map[string]int, err error) {
 	var files []models.UserFile

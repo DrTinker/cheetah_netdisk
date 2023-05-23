@@ -3,7 +3,7 @@ package conf
 import "time"
 
 // HTTP启动项
-const App = "conf/app.ini"
+const App = "D:\\Program\\Projects\\netdesk_system\\merge\\conf\\app.ini"
 const HttpServer = "HttpServer"
 
 // jwt
@@ -96,3 +96,8 @@ const Default_Sign_Expire = time.Minute * 15 // 签名默认有效时间
 const Store_Type_COS = 0                     // 存储类型
 const Store_Type_Tmp = 1                     // 临时存储
 const Store_Type_Local = 2
+
+// 文件分享
+const Administrator_Uuid = "0"
+
+const Default_Page_Size = 10

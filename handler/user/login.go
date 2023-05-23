@@ -46,7 +46,15 @@ func LoginHandler(c *gin.Context) {
 	pwd := u.Password
 
 	info, err := client.GetDBClient().GetUserByEmail(email)
-	if err != nil || info.Password != pwd {
+	if err != nil && err != conf.DBNotFoundError {
+		log.Error("LoginHandler pwd err: %+v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
+		})
+		return
+	}
+	if err == conf.DBNotFoundError || info.Password != pwd {
 		log.Error("LoginHandler pwd err: %+v", err)
 		c.JSON(http.StatusOK, gin.H{
 			"code": conf.ERROR_LOGIN_CODE,

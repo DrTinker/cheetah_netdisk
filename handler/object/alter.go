@@ -109,15 +109,15 @@ func FileUpdateHandler(c *gin.Context) {
 	// 仅更改名称
 	if err := service.UpdateObjectName(user_file_uuid, name, ext); err != nil {
 		log.Error("FileUpdateHandler update err: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPDATE_NAME_CODE,
-			"msg":  conf.UPDATE_FILE_NAME_FAIL_MESSAGE,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
 		})
 		return
 	}
 	// 成功
 	log.Info("FileUpdateHandler success: ", user_file_uuid)
-	c.JSON(http.StatusBadRequest, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,
 	})

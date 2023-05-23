@@ -208,15 +208,19 @@ func UploadFileByPath(param *models.UploadObjectParams, path string) error {
 
 // 创建文件夹
 func Mkdir(folder *models.UserFile, parent_uuid string) error {
-	// 获取父级文件夹ID
-	ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{parent_uuid})
-	if err != nil || ids == nil {
-		return errors.Wrap(err, "[Mkdir] get parent id error: ")
+	if parent_uuid == "" {
+		folder.Parent_Id = conf.Default_System_parent
+	} else {
+		// 获取父级文件夹ID
+		ids, err := client.GetDBClient().GetUserFileIDByUuid([]string{parent_uuid})
+		if err != nil || ids == nil {
+			return errors.Wrap(err, "[Mkdir] get parent id error: ")
+		}
+		parentId := ids[parent_uuid]
+		folder.Parent_Id = parentId
 	}
-	parentId := ids[parent_uuid]
-	folder.Parent_Id = parentId
 	// 插入记录
-	err = client.GetDBClient().CreateUserFile(folder)
+	err := client.GetDBClient().CreateUserFile(folder)
 	if err != nil {
 		return errors.Wrap(err, "[Mkdir] create user file record error: ")
 	}
