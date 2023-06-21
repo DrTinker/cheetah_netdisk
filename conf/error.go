@@ -27,6 +27,7 @@ var SliceMissError = errors.New("Slice misses error")
 
 // 文件操作
 var NameRepeatError = errors.New("File name exist")
+var ExtChangeError = errors.New("File ext name should not be changed")
 
 // 文件删除
 var EmptyDeleteError = errors.New("No such file to be deleted")

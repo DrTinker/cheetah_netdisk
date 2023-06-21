@@ -104,11 +104,14 @@ func SplitFileFullName(fullName string) (name string, ext string, err error) {
 		return "", "", conf.FilePathError
 	}
 	part := strings.Split(fullName, ".")
-	if len(part) != 2 {
+	if len(part) == 0 {
 		return "", "", conf.FilePathError
 	}
-	name = part[0]
-	ext = part[1]
+	name = ""
+	ext = part[len(part)-1]
+	for i := 0; i < len(part)-1; i++ {
+		name += part[i]
+	}
 	return name, ext, nil
 }
 

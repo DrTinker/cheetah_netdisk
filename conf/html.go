@@ -9,7 +9,7 @@ const File_Ext_Key = "ext"
 
 // 文件上传相关
 const File_Form_Key = "files"
-const File_Hash_Key = "md5"
+const File_Hash_Key = "hash"
 const File_Uuid_Key = "file_uuid"
 const File_Name_Key = "name"
 const File_Size_Key = "size"

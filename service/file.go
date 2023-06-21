@@ -310,7 +310,7 @@ func UpdateObjectName(uuid, name, ext string) error {
 	}
 	// TODO ext变更时处理
 	if src_file.Ext != ext {
-		// DO NOTHING
+		return conf.ExtChangeError
 	}
 	if err := client.GetDBClient().UpdateUserFileName(name, ext, uuid); err != nil {
 		return errors.Wrap(err, "[UpdateObjectName] update name error: ")

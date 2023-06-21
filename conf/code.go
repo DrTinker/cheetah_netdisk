@@ -28,12 +28,10 @@ const ERROR_UPLOAD_CODE = 22000
 const ERROR_VOLUME_COUNT_CODE = 22001
 const ERROR_FILE_CHECK_CODE = 22002 // 文件校验时出错
 const ERROR_FILE_EXIST_CODE = 22003 // 文件存在
+const QUICK_UPLOAD_CODE = 22004     // 文件存在
 const ERROR_FILE_HASH_CODE = 22005  // 文件md5值无效
 const ERROR_GET_URL_CODE = 22006    // 获取预签名错误
 const FILE_EXIST_CODE = 22007       // 同一个用户上传相同文件
-
-// 分片上传
-const ERROR_UPLOAD_PART_INIT_CODE = 22004 // 初始化
 
 // 获取文件列表
 const ERROR_INVAILD_PAGE_CODE = 22005 // 给定页数超过最大页数

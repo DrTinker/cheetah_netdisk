@@ -111,7 +111,7 @@ func UploadHandler(c *gin.Context) {
 		// 秒传直接返回
 		log.Info("UploadHandler success: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.SUCCESS_RESP_MESSAGE,
+			"code":    conf.QUICK_UPLOAD_CODE,
 			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
 			"file_id": user_file_uuid,
 		})
@@ -169,7 +169,7 @@ func InitUploadPartHandler(c *gin.Context) {
 		})
 		return
 	}
-	// 检查有效性性的中间件已经读取过了，因此从ctx中获取
+	// 获取文件哈希值
 	hash := c.PostForm(conf.File_Hash_Key)
 	if err != nil {
 		log.Error("InitUploadPartHandler invaild file hash")
@@ -179,7 +179,7 @@ func InitUploadPartHandler(c *gin.Context) {
 		})
 		return
 	}
-	// 文件夹名称
+	// 文件名称
 	fileName := c.PostForm(conf.File_Name_Key)
 	name, ext, err := helper.SplitFileFullName(fileName)
 	if err != nil {
@@ -191,7 +191,7 @@ func InitUploadPartHandler(c *gin.Context) {
 		return
 	}
 	fileKey := helper.GenFileKey(hash, ext)
-	// 前端传入uuid后端查询id
+	// 上传目录uuid
 	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
 	if fileKey == "" || user_file_uuid_parent == "" {
 		log.Error("InitUploadPartHandler empty file key")
@@ -237,7 +237,7 @@ func InitUploadPartHandler(c *gin.Context) {
 		// 秒传直接返回
 		log.Info("InitUploadPartHandler success, file exist: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.SUCCESS_RESP_MESSAGE,
+			"code":    conf.QUICK_UPLOAD_CODE,
 			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
 			"file_id": user_file_uuid,
 		})
@@ -247,9 +247,9 @@ func InitUploadPartHandler(c *gin.Context) {
 	info, err := service.InitUploadPart(param)
 	if err != nil {
 		log.Error("InitUploadPartHandler invaild file size")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_PART_INIT_CODE,
-			"msg":  conf.UPLOAD_PART_INIT_FAIL_MESSAGE,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
 		})
 		return
 	}

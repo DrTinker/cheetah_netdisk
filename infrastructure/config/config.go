@@ -51,7 +51,7 @@ func (c *ConfigClientImpl) GetHttpConfig() (*models.HttpConfig, error) {
 	if c.source == nil {
 		return nil, errors.New("empty http config")
 	}
-	c.Http.Address = c.source.Section("HttpServer").Key("address").MustString("127.0.0.1")
+	c.Http.Address = c.source.Section("HttpServer").Key("address").String()
 	c.Http.Port = c.source.Section("HttpServer").Key("port").MustInt(8081)
 	return c.Http, nil
 }

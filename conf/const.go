@@ -65,7 +65,7 @@ const Code_Expire = 5 * time.Minute
 const Code_Param_Key = "code"
 
 // 文件上传
-const File_Part_Size_Max = 1024 * 1024 * 16 // 1MB
+const File_Part_Size_Max = 1024 * 1024 // 1MB
 const Default_Thread_Pool_Size = 5
 const Folder_Default_Size = 1
 const Folder_Default_EXT = "folder"

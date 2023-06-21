@@ -336,6 +336,7 @@ func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int
 		User_Uuid: src_file.User_Uuid,
 		File_Uuid: src_file.File_Uuid,
 	}
+	// TODO 增加用户空间大小
 	// 复制文件
 	if err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		// 复制user_file记录
