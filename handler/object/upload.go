@@ -102,7 +102,7 @@ func UploadHandler(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileName),
 		})
 		return
@@ -130,7 +130,7 @@ func UploadHandler(c *gin.Context) {
 
 	log.Info("UploadHandler success: ", user_file_uuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":    conf.SUCCESS_RESP_MESSAGE,
+		"code":    conf.HTTP_SUCCESS_CODE,
 		"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
 		"file_id": user_file_uuid,
 	})
@@ -144,6 +144,7 @@ func UploadHandler(c *gin.Context) {
 //		   chunk_size: 分块大小
 // 		   chunk_count: 分块数量
 // 		   chunk_list: 已经上传的分块列表
+// user_file_uuid & file_uuid在这里生成
 func InitUploadPartHandler(c *gin.Context) {
 	// 获取文件大小
 	fileSize := c.PostForm(conf.File_Size_Key)

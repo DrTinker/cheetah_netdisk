@@ -100,7 +100,7 @@ func UploadFileByStream(param *models.UploadObjectParams, data []byte) error {
 		Uuid:       file_uuid,
 		Name:       name,
 		Ext:        ext,
-		Path:       fileKey,
+		File_Key:   fileKey,
 		Hash:       hash,
 		Link:       1,
 		Store_Type: conf.Store_Type_Tmp,
@@ -173,7 +173,7 @@ func UploadFileByPath(param *models.UploadObjectParams, path string) error {
 		Uuid:       file_uuid,
 		Name:       name,
 		Ext:        ext,
-		Path:       fileKey,
+		File_Key:   fileKey,
 		Hash:       hash,
 		Link:       1,
 		Store_Type: conf.Store_Type_Tmp,
@@ -384,7 +384,7 @@ func deleteHelper(user_file_uuid, file_uuid string) error {
 		return nil
 	}
 	// 为0同步删除COS和数据库记录
-	if err := client.GetCOSClient().Delete(file.Path); err != nil {
+	if err := client.GetCOSClient().Delete(file.File_Key); err != nil {
 		return errors.Wrap(err, "[DeleteObject] delete cos error: ")
 	}
 	if err := client.GetDBClient().DeleteUploadRecord(file_uuid, user_file_uuid); err != nil {

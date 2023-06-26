@@ -13,7 +13,7 @@ type File struct { // file中的一条记录唯一对应一个COS中的实际文
 	Name       string // 文件名称
 	Hash       string // 哈希值判断文件存在性
 	Ext        string // 文件扩展名
-	Path       string // 文件路径，即COS中的唯一KEY, 为test/hash.ext(测试阶段)或root/hash.ext(正式阶段)
+	File_Key   string // 文件路径，即COS中的唯一KEY, 为test/hash.ext(测试阶段)或root/hash.ext(正式阶段)
 	Size       int    // 文件大小
 	Link       int    `json:"-"` // 文件引用数
 	Store_Type int    // 存储类型 0: cos 1: tmp 2: local

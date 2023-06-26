@@ -61,6 +61,8 @@ type DBClient interface {
 
 	UpdateClickNumByUuid(uuid string) error
 
+	// trans
+
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)
 	CreateUploadRecord(file *models.File, userFile *models.UserFile) error

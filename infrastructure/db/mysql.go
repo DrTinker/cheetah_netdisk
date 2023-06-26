@@ -177,11 +177,14 @@ func (d *DBClientImpl) CreateQuickUploadRecord(userFile *models.UserFile, size i
 			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Update user err:")
 		}
 		// 修改file_pool中文件引用数
-		err = d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", userFile.File_Uuid).
+		err = tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", userFile.File_Uuid).
 			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", 1)).Error
 		if err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Update link err:")
 		}
+		// 创建trans记录
+		// trans := &models.Trans{}
+		// err = tx.Table(conf.Trans_TB).Create()
 		// 返回 nil 提交事务
 		return nil
 	})
@@ -349,6 +352,17 @@ func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int
 			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", 1)).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CopyUserFile increase link err:")
 		}
+		// 查询文件大小
+		file := &models.File{}
+		if err := tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).
+			Select(conf.File_Size_DB).Find(file).Error; err != nil {
+			return errors.Wrap(err, "[DBClientImpl] CopyUserFile get user volume err:")
+		}
+		// 更改用户空间大小
+		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", src_file.User_Uuid).
+			Update(conf.User_Now_Volume_DB, gorm.Expr(conf.User_Now_Volume_DB+"+?", file.Size)).Error; err != nil {
+			return errors.Wrap(err, "[DBClientImpl] CopyUserFile update user volume err:")
+		}
 		return nil
 	}); err != nil {
 		return -1, err
@@ -455,7 +469,7 @@ func (d *DBClientImpl) GetFileKeyByUserFileUuid(uuid string) (fileKey string, er
 	if err != nil {
 		return "", errors.Wrap(err, "[DBClientImpl] GetUserFileByPath err:")
 	}
-	return file.Path, nil
+	return file.File_Key, nil
 }
 
 func (d *DBClientImpl) CreateUserFile(user_file *models.UserFile) error {
