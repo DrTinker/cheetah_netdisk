@@ -32,6 +32,11 @@ func UploadConsumerMsg(msg []byte) bool {
 		log.Error("[UploadConsumerMsg] update db error: ", err)
 		return false
 	}
+	err = client.GetDBClient().UpdateTransState(data.UploadID, conf.Trans_Success)
+	if err != nil {
+		log.Error("[UploadConsumerMsg] update db error: ", err)
+		return false
+	}
 	// 删除tmp下文件
 	err = helper.DelFile(data.Src, 0)
 	if err != nil {

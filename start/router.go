@@ -23,9 +23,9 @@ func RegisterRouter(r *gin.Engine) {
 	o := r.Group("/object")
 	{
 		o.POST("/upload/total", middleware.JWT(true), middleware.FileCheck(), object.UploadHandler)
-		o.POST("/upload_part/init", middleware.JWT(true), object.InitUploadPartHandler)
-		o.POST("/upload_part/upload", middleware.JWT(true), object.UploadPartHandler)
-		o.POST("/upload_part/complete", middleware.JWT(true), object.CompleteUploadPartHandler)
+		o.POST("/upload/init", middleware.JWT(true), object.InitUploadHandler)
+		o.POST("/upload/part", middleware.JWT(true), object.UploadPartHandler)
+		o.POST("/upload/complete", middleware.JWT(true), object.CompleteUploadPartHandler)
 		o.POST("/mkdir", middleware.JWT(true), object.MakeDirHandler)
 		o.GET("/list", middleware.JWT(true), object.GetFileListHandler)
 		o.POST("/copy", middleware.JWT(true), object.CopyFileHandler)

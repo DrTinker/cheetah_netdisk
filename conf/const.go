@@ -55,6 +55,8 @@ const User_File_Pool_UUID_DB = "file_uuid"
 const Share_UUID_DB = "uuid"
 const Share_User_File_UUID_DB = "user_file_uuid"
 const Share_Click_Num_DB = "click_num"
+const Trans_UUID_DB = "uuid"
+const Trans_Status_DB = "status"
 
 // 邮件
 const Email_Verify_MSG = "Cheetah Net Desk验证码"
@@ -65,6 +67,12 @@ const Code_Cache_Key = "verify_code_key"
 const Code_Len = 6
 const Code_Expire = 5 * time.Minute
 const Code_Param_Key = "code"
+
+// 传输状态
+const Trans_Process = 0 // 上传中
+const Trans_Success = 1 // 上传成功
+const Trans_Fail = 2    // 上传失败（redis中key到期）
+const Trans_Nil = -1
 
 // 文件上传
 const File_Part_Size_Max = 1024 * 1024 // 1MB
@@ -81,8 +89,8 @@ const Upload_Part_Info_Size_Key = "FileSize"
 const Upload_Part_Info_ID_Key = "UploadID"
 const Upload_Part_Info_CSize_Key = "ChunkSize"
 const Upload_Part_Info_CCount_Key = "ChunkCount"
-const Upload_Part_File_Info_Key = "File_Info"
-const Uploac_Part_Info_Fileds = 6
+const Upload_Part_File_Info_Key = "FileInfo"
+const Upload_Part_Info_Fileds = 4 // redis 分块上传hash结构中前4条为配置信息，之后的kv才是已上传分块
 
 // mq相关
 const Routing_Key = "cos"

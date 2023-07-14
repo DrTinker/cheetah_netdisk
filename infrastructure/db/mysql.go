@@ -161,30 +161,16 @@ func (d *DBClientImpl) CreateQuickUploadRecord(userFile *models.UserFile, size i
 			// 返回任何错误都会回滚事务
 			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Create user file err:")
 		}
-		// 检查文件大小
-		user := &models.User{}
-		err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).First(user).Error
-		if err != nil {
-			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Get volume err:")
-		}
-		cur := user.Now_Volume + int64(size)
-		if user.Total_Volume < cur+int64(size) {
-			return conf.VolumeError
-		}
 		// 更新用户空间大小
 		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).
-			Update(conf.User_Now_Volume_DB, cur).Error; err != nil {
+			Update(conf.User_Now_Volume_DB, gorm.Expr(conf.User_Now_Volume_DB+"+?", size)).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Update user err:")
 		}
 		// 修改file_pool中文件引用数
-		err = tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", userFile.File_Uuid).
-			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", 1)).Error
-		if err != nil {
+		if err := tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", userFile.File_Uuid).
+			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", 1)).Error; err != nil {
 			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Update link err:")
 		}
-		// 创建trans记录
-		// trans := &models.Trans{}
-		// err = tx.Table(conf.Trans_TB).Create()
 		// 返回 nil 提交事务
 		return nil
 	})
@@ -551,4 +537,40 @@ func (d *DBClientImpl) UpdateClickNumByUuid(uuid string) error {
 		return errors.Wrap(err, "[DBClientImpl] UpdateClickNumByUuid Update click err:")
 	}
 	return nil
+}
+
+// 创建传输记录
+func (d *DBClientImpl) CreateTrans(trans *models.Trans) error {
+	err := d.DBConn.Table(conf.Trans_TB).Create(trans).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] CreateTrans err:")
+	}
+	return nil
+}
+
+// 更改trans记录类型
+func (d *DBClientImpl) UpdateTransState(uuid string, state int) error {
+	err := d.DBConn.Table(conf.Trans_TB).Where(conf.Trans_UUID_DB+"=?", uuid).
+		Update(conf.Trans_Status_DB, state).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateTransState Update state err:")
+	}
+	return nil
+}
+
+func (d *DBClientImpl) GetTransStatusByUuid(uuid string) (state int, err error) {
+	trans := &models.Trans{}
+	err = d.DBConn.Table(conf.Trans_TB).Where(conf.Trans_UUID_DB+"=?", uuid).
+		Find(trans).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return conf.Trans_Nil, nil
+	}
+	if err != nil {
+		return -2, errors.Wrap(err, "[DBClientImpl] GetTransStatusByUuid get state err:")
+	}
+	return trans.Status, nil
+}
+
+func (d *DBClientImpl) GetTransListByUser(user_uuid string) ([]*models.Trans, error) {
+	return nil, nil
 }

@@ -58,6 +58,7 @@ type TransferSetting struct {
 
 // 消息队列消息结构
 type TransferMsg struct {
+	UploadID  string // 上传ID唯一
 	FileHash  string
 	Src       string // 本地存储路径
 	Des       string // cos filekey

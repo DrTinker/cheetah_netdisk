@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,9 +17,12 @@ func OpenFile(filename string) (*os.File, error) {
 	return os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
 }
 
-func WriteFile(path string, data []byte) error {
+func WriteFile(path, name string, data []byte) error {
+	// 目录不存在则创建目录
+	os.MkdirAll(path, os.ModePerm)
 	// 文件存在时清空文件再写
-	err := ioutil.WriteFile(path, data, 0666) //写入文件(字节数组)
+	des := fmt.Sprintf("%s/%s", path, name)
+	err := ioutil.WriteFile(des, data, 0666) //写入文件(字节数组)
 	if err != nil {
 		return err
 	}
@@ -47,6 +52,7 @@ func MergeFile(src, des string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	writer := bufio.NewWriter(desFile)
 	// 读取src路径下全部文件
 	files, err := filepath.Glob(src + "*")
 	if err != nil {
@@ -61,7 +67,9 @@ func MergeFile(src, des string) (*os.File, error) {
 		if err != nil {
 			return nil, err
 		}
-		desFile.Write(data)
+		writer.Write(data)
+		//Flush将缓存的文件真正写入到文件中
+		writer.Flush()
 		f.Close()
 	}
 
