@@ -56,7 +56,9 @@ const Share_UUID_DB = "uuid"
 const Share_User_File_UUID_DB = "user_file_uuid"
 const Share_Click_Num_DB = "click_num"
 const Trans_UUID_DB = "uuid"
+const Trans_User_UUID_DB = "user_uuid"
 const Trans_Status_DB = "status"
+const Trans_IsDown_DB = "isdown"
 
 // 邮件
 const Email_Verify_MSG = "Cheetah Net Desk验证码"
@@ -73,6 +75,10 @@ const Trans_Process = 0 // 上传中
 const Trans_Success = 1 // 上传成功
 const Trans_Fail = 2    // 上传失败（redis中key到期）
 const Trans_Nil = -1
+
+// 传输类型
+const Upload_Mod = 0
+const Download_Mod = 1
 
 // 文件上传
 const File_Part_Size_Max = 1024 * 1024 // 1MB

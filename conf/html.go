@@ -32,3 +32,7 @@ const Share_User_File_Uuid = "file_uuid"
 const Share_Uuid = "share_uuid"
 const Share_Code = "code"
 const Share_Expire_Time = "expire_at"
+
+// 传输
+const Trans_Isdown_Key = "isdown"
+const Trans_Status_Key = "status"

@@ -83,6 +83,23 @@ func UploadFileByStream(param *models.TransObjectParams, data []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "[UploadFileByStream] store upload record error: ")
 	}
+	// 生成uploadID，并写trans
+	uploadID := helper.GenUploadID(user_uuid, hash)
+	trans := &models.Trans{
+		Uuid:           uploadID,
+		User_Uuid:      user_uuid,
+		User_File_Uuid: user_file_uuid,
+		File_Uuid:      file_uuid,
+		File_Key:       fileKey,
+		Hash:           hash,
+		Name:           name,
+		Ext:            ext,
+		Status:         conf.Trans_Success,
+		Isdown:         0,
+		Parent_Uuid:    param.Parent,
+	}
+	// 容忍插入失败
+	client.GetDBClient().CreateTrans(trans)
 	return nil
 }
 
@@ -162,8 +179,8 @@ func UploadPart(uploadID string, chunkNum int, data []byte) error {
 		return errors.Wrap(err, "[UploadPart] store file error: ")
 	}
 	// 更新redis
-	key := helper.GenUploadPartInfoKey(uploadID)
-	err = client.GetCacheClient().HSet(key, strconv.Itoa(chunkNum), 1)
+	key := helper.GenTransPartInfoKey(uploadID)
+	err = client.GetCacheClient().HSet(key, strconv.Itoa(chunkNum), strconv.Itoa(chunkNum))
 	if err != nil {
 		return errors.Wrap(err, "[UploadPart] update cache error: ")
 	}

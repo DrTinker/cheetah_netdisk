@@ -212,7 +212,7 @@ func InitUploadPart(param *models.TransObjectParams) (*models.InitTransResult, e
 	if param.UploadID == "" {
 		uploadID = helper.GenUploadID(user_uuid, hash)
 	}
-	infoKey := helper.GenUploadPartInfoKey(uploadID)
+	infoKey := helper.GenTransPartInfoKey(uploadID)
 	count := size/conf.File_Part_Size_Max + 1
 	// 尝试获取分片信息，如果存在则说明之前上传过，触发断点续传逻辑
 	tmpInfo, err := client.GetCacheClient().HGetAll(infoKey)

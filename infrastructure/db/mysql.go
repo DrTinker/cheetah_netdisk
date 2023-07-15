@@ -571,6 +571,15 @@ func (d *DBClientImpl) GetTransStatusByUuid(uuid string) (state int, err error) 
 	return trans.Status, nil
 }
 
-func (d *DBClientImpl) GetTransListByUser(user_uuid string) ([]*models.Trans, error) {
-	return nil, nil
+func (d *DBClientImpl) GetTransListByUser(user_uuid string, cur, pageSize, mod, status int) (trans []*models.Trans, err error) {
+	// limit + offset实现分页查询
+	err = d.DBConn.Table(conf.Trans_TB).
+		Where(conf.Trans_User_UUID_DB+"=?", user_uuid).
+		Where(conf.Trans_IsDown_DB+"=?", mod).
+		Where(conf.Trans_Status_DB+"=?", status).
+		Limit(pageSize).Offset((cur - 1) * pageSize).Find(&trans).Error
+	if trans == nil || err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetTransListByUser err:")
+	}
+	return trans, nil
 }

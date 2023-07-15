@@ -1,7 +1,7 @@
 package main
 
 import (
-	"NetDesk/handler/object"
+	"NetDesk/handler/trans"
 	"NetDesk/start"
 	"fmt"
 )
@@ -19,5 +19,5 @@ func init() {
 
 func main() {
 	fmt.Printf("running transfer service")
-	object.TransferObjectHandler()
+	trans.TransferObjectHandler()
 }

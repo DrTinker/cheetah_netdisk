@@ -47,3 +47,7 @@ const DELETE_FILE_FAIL_MESSAGE = "Delete file DB error"
 // 分享
 const CREATE_SHARE_FAIL_MESSAGE = "Create share link error"
 const SHARE_EXPIRES_MSG = "The link expires "
+
+// 传输
+const GET_TRANS_INFO_FAIL_MESSAGE = "Get trans list error"
+const LIST_TRANS_SUCCESS_MESSAGE = "Get file list success"

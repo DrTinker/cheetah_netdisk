@@ -5,6 +5,7 @@ import (
 
 	"NetDesk/handler/object"
 	"NetDesk/handler/share"
+	"NetDesk/handler/trans"
 	"NetDesk/handler/user"
 	middleware "NetDesk/middleware"
 )
@@ -20,12 +21,21 @@ func RegisterRouter(r *gin.Engine) {
 		u.GET("/email", user.EmailVerifyHandler)
 	}
 
+	t := r.Group("/trans")
+	{
+		t.GET("/info", middleware.JWT(true), trans.GetTransListHandler)
+
+		t.POST("/upload/total", middleware.JWT(true), middleware.FileCheck(), trans.UploadHandler)
+		t.POST("/upload/init", middleware.JWT(true), trans.InitUploadHandler)
+		t.POST("/upload/part", middleware.JWT(true), trans.UploadPartHandler)
+		t.POST("/upload/complete", middleware.JWT(true), trans.CompleteUploadPartHandler)
+
+		t.GET("/download/total", middleware.JWT(true), trans.DownloadFileHandler)
+	}
+
 	o := r.Group("/object")
 	{
-		o.POST("/upload/total", middleware.JWT(true), middleware.FileCheck(), object.UploadHandler)
-		o.POST("/upload/init", middleware.JWT(true), object.InitUploadHandler)
-		o.POST("/upload/part", middleware.JWT(true), object.UploadPartHandler)
-		o.POST("/upload/complete", middleware.JWT(true), object.CompleteUploadPartHandler)
+
 		o.POST("/mkdir", middleware.JWT(true), object.MakeDirHandler)
 		o.GET("/list", middleware.JWT(true), object.GetFileListHandler)
 		o.POST("/copy", middleware.JWT(true), object.CopyFileHandler)
@@ -33,7 +43,7 @@ func RegisterRouter(r *gin.Engine) {
 		o.GET("/info/path", middleware.JWT(true), object.GetFileInfoByPathHandler)
 		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
-		o.GET("/download/total", middleware.JWT(true), object.DownloadFileHandler)
+
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
 
 		// batch

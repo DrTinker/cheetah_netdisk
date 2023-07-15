@@ -75,3 +75,29 @@ func MergeFile(src, des string) (*os.File, error) {
 
 	return desFile, nil
 }
+
+// 文件是否存在
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil { //文件或者目录存在
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func RemoveDir(path string) error {
+	exist, err := PathExists(path)
+	if err != nil {
+		return err
+	}
+	if exist {
+		err = os.RemoveAll(path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
