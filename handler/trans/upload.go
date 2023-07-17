@@ -96,7 +96,7 @@ func UploadHandler(c *gin.Context) {
 		log.Error("UploadHandler quick upload err: ", err)
 		// 同一个人上传同一个文件，返回错误前端走复制文件接口
 		if err == conf.FileExistError {
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"code": conf.FILE_EXIST_CODE,
 				"msg":  conf.FILE_EXIST_MESSAGE,
 			})
@@ -205,14 +205,6 @@ func InitUploadHandler(c *gin.Context) {
 	}
 	// uploadID用于断点续传
 	uploadID := c.PostForm(conf.File_Upload_ID_Key)
-	if hash == "" {
-		log.Error("InitUploadHandler invaild local path")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.HTTP_INVALID_PARAMS_CODE,
-			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
-		})
-		return
-	}
 	fileKey := helper.GenFileKey(hash, ext)
 	// 上传目录uuid
 	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
@@ -245,7 +237,15 @@ func InitUploadHandler(c *gin.Context) {
 	// 调用service层
 	info, err := service.InitUpload(param)
 	if err != nil {
-		log.Error("InitUploadHandler invaild file size")
+		log.Error("InitUploadHandler quick upload err: ", err)
+		// 同一个人上传同一个文件，返回错误前端走复制文件接口
+		if err == conf.FileExistError {
+			c.JSON(http.StatusOK, gin.H{
+				"code": conf.FILE_EXIST_CODE,
+				"msg":  conf.FILE_EXIST_MESSAGE,
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -368,6 +368,13 @@ func CompleteUploadPartHandler(c *gin.Context) {
 	param, path, err := service.CompleteUploadPart(uploadID)
 	if err != nil {
 		log.Error("CompleteUploadPartHandler service error: ", err)
+		if err == conf.InvaildFileHashError {
+			c.JSON(http.StatusOK, gin.H{
+				"code": conf.ERROR_FILE_HASH_CODE,
+				"msg":  err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.ERROR_UPLOAD_CODE,
 			"msg":  err.Error(),
@@ -379,7 +386,7 @@ func CompleteUploadPartHandler(c *gin.Context) {
 	if err != nil {
 		log.Error("CompleteUploadPartHandler service error: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, param.Name+"."+param.Ext),
 		})
 		return

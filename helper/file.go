@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"strconv"
 )
 
 // 打开本地文件
@@ -30,18 +30,29 @@ func WriteFile(path, name string, data []byte) error {
 }
 
 // 删除文件
-// mod 0: 文件 1: 文件夹
-func DelFile(path string, mod int) error {
-	var err error
-	switch mod {
-	case 0:
-		err = os.Remove(path)
-	case 1:
-		err = os.RemoveAll(path)
-	default:
-		break
-	}
+func DelFile(path string) error {
+	err := os.Remove(path)
 	return err
+}
+
+// 返回目录下全部文件列表，按照数字大小排序
+func ReadDir(path string) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	list, err := f.Readdir(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]string, len(list))
+	for _, f := range list {
+		n, _ := strconv.Atoi(f.Name())
+		// 分片从1开始
+		res[n-1] = f.Name()
+	}
+	return res, nil
 }
 
 // 将src路径下的全部文件合成一个文件写入des
@@ -52,14 +63,16 @@ func MergeFile(src, des string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer desFile.Close()
 	writer := bufio.NewWriter(desFile)
 	// 读取src路径下全部文件
-	files, err := filepath.Glob(src + "*")
+	files, err := ReadDir(src)
 	if err != nil {
 		return nil, err
 	}
+
 	for _, f := range files {
-		f, err := OpenFile(f)
+		f, err := OpenFile(src + f)
 		if err != nil {
 			return nil, err
 		}

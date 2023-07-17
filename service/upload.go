@@ -69,6 +69,7 @@ func UploadFileByStream(param *models.TransObjectParams, data []byte) error {
 	}
 	// 写mq
 	msg := &models.TransferMsg{
+		UploadID:  param.UploadID,
 		FileHash:  hash,
 		Src:       cfg.TmpPath + "/" + filename,
 		Des:       fileKey,
@@ -92,6 +93,7 @@ func UploadFileByStream(param *models.TransObjectParams, data []byte) error {
 		File_Uuid:      file_uuid,
 		File_Key:       fileKey,
 		Hash:           hash,
+		Size:           size,
 		Name:           name,
 		Ext:            ext,
 		Status:         conf.Trans_Success,
@@ -148,6 +150,7 @@ func UploadFileByPath(param *models.TransObjectParams, path string) error {
 	}
 	// 写mq
 	data := &models.TransferMsg{
+		UploadID:  param.UploadID,
 		FileHash:  hash,
 		Src:       path,
 		Des:       fileKey,

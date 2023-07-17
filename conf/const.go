@@ -81,7 +81,7 @@ const Upload_Mod = 0
 const Download_Mod = 1
 
 // 文件上传
-const File_Part_Size_Max = 1024 * 1024 // 1MB
+const File_Part_Size_Max = 1024 * 1024 * 1 // 1MB
 const Default_Thread_Pool_Size = 5
 const Folder_Default_Size = 1
 const Folder_Default_EXT = "folder"

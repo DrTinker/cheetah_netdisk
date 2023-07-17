@@ -105,7 +105,7 @@ func (d *DBClientImpl) CheckFileExist(hash string) (bool, string, error) {
 	return true, file.Uuid, nil
 }
 
-func (d *DBClientImpl) CheckUserFileExist(user_uuid, file_uuid string) (bool, error) {
+func (d *DBClientImpl) CheckUserFileExist(file_uuid, user_uuid string) (bool, error) {
 	user_file := &models.UserFile{}
 	err := d.DBConn.Table(conf.User_File_TB).Where(&models.UserFile{File_Uuid: file_uuid, User_Uuid: user_uuid}).
 		First(user_file).Error

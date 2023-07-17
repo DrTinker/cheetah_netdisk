@@ -77,6 +77,7 @@ func QuickUpload(param *models.TransObjectParams) (bool, error) {
 		File_Uuid:      param.File_Uuid,
 		File_Key:       param.FileKey,
 		Local_Path:     param.LocalPath,
+		Parent_Uuid:    param.Parent,
 		Hash:           param.Hash,
 		Size:           param.Size,
 		Name:           param.Name,
@@ -109,6 +110,7 @@ func InitUpload(param *models.TransObjectParams) (*models.InitTransResult, error
 	// 若为首次传输，则根据文件内容生成uploadID
 	if uploadID == "" {
 		uploadID = helper.GenUploadID(user_uuid, hash)
+		param.UploadID = uploadID
 		// 判断秒传，若为秒传则记录数据库
 		quick, err := QuickUpload(param)
 		if err == conf.FileExistError {
@@ -232,15 +234,19 @@ func CompleteUploadPart(uploadID string) (*models.TransObjectParams, string, err
 	if err != nil {
 		return nil, "", errors.Wrap(err, "[CompleteUploadPart] merge file error: ")
 	}
-	// 检查文件hash合法性
-	hash := helper.CountMD5(des, nil, 0)
-	if hash != param.Hash {
-		return nil, "", conf.InvaildFileHashError
-	}
 	// 删除分片文件夹
 	err = helper.RemoveDir(src[:len(src)-1])
 	if err != nil {
 		logrus.Warn("[CompleteUploadPart] remove src err: ", err)
+	}
+	// 检查文件hash合法性
+	hash := helper.CountMD5(des, nil, 0)
+	if hash != param.Hash {
+		// 直接改为失败
+		client.GetDBClient().UpdateTransState(uploadID, conf.Trans_Fail)
+		// 删除合并后的文件
+		helper.DelFile(des)
+		return nil, "", conf.InvaildFileHashError
 	}
 	return param, des, nil
 }

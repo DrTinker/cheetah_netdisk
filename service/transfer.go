@@ -38,7 +38,7 @@ func UploadConsumerMsg(msg []byte) bool {
 		return false
 	}
 	// 删除tmp下文件
-	err = helper.DelFile(data.Src, 0)
+	err = helper.DelFile(data.Src)
 	if err != nil {
 		log.Error("[UploadConsumerMsg] remove tmp file error: ", err)
 		return false
