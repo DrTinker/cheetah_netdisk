@@ -5,6 +5,7 @@ import (
 	"NetDesk/models"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -37,6 +38,14 @@ func (m *MQClientImpl) InitTransfer(exchange, key string) (*models.TransferSetti
 		RoutinKey: key,
 	}
 	return settings, nil
+}
+
+// 一个线程一个channel，用完关闭
+func (m *MQClientImpl) ReleaseChannel(s *models.TransferSetting) {
+	err := s.Channel.Close()
+	if err != nil {
+		logrus.Error("channel close err: ", err)
+	}
 }
 
 func (m *MQClientImpl) Publish(setting *models.TransferSetting, msg []byte) error {

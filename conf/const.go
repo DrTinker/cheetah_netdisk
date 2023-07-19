@@ -86,6 +86,7 @@ const Default_Thread_Pool_Size = 5
 const Folder_Default_Size = 1
 const Folder_Default_EXT = "folder"
 const File_Exist_Flag = "exist"
+const Publish_Retry_Times = 5
 
 // 分块上传
 const Upload_Part_Info_Key = "Upload_Info"      // 分块上传信息rediskey前缀
@@ -115,5 +116,7 @@ const Store_Type_Local = 2
 
 // 文件分享
 const Administrator_Uuid = "0"
-
 const Default_Page_Size = 10
+
+// 媒体处理
+const Default_ThumbNail_Scale = "320x240"

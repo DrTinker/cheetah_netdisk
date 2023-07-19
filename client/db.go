@@ -66,6 +66,7 @@ type DBClient interface {
 	UpdateTransState(uuid string, state int) error
 	GetTransStatusByUuid(uuid string) (state int, err error)
 	GetTransListByUser(user_uuid string, cur, pageSize, mod, status int) ([]*models.Trans, error)
+	DelTransByUuid(uuid string) error
 
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)

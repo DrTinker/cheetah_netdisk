@@ -231,7 +231,9 @@ func CompleteUploadPart(uploadID string) (*models.TransObjectParams, string, err
 	src := fmt.Sprintf("%s/%s/", cfg.TmpPath, uploadID)
 	des := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, param.Name, param.Ext)
 	_, err = helper.MergeFile(src, des)
-	if err != nil {
+	desFlag, _ := helper.PathExists(des)
+	// 如果分片文件夹不存在 且 目标文件也不存在
+	if err != nil && !desFlag {
 		return nil, "", errors.Wrap(err, "[CompleteUploadPart] merge file error: ")
 	}
 	// 删除分片文件夹
@@ -248,6 +250,7 @@ func CompleteUploadPart(uploadID string) (*models.TransObjectParams, string, err
 		helper.DelFile(des)
 		return nil, "", conf.InvaildFileHashError
 	}
+
 	return param, des, nil
 }
 

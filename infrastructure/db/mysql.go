@@ -583,3 +583,13 @@ func (d *DBClientImpl) GetTransListByUser(user_uuid string, cur, pageSize, mod, 
 	}
 	return trans, nil
 }
+
+// 删除指定trans记录
+func (d *DBClientImpl) DelTransByUuid(uuid string) error {
+	trans := &models.Trans{}
+	err := d.DBConn.Table(conf.Trans_TB).Where(conf.Trans_UUID_DB+"=?", uuid).Delete(trans).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] DelTransByUuid err:")
+	}
+	return nil
+}

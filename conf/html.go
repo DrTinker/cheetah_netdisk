@@ -15,7 +15,7 @@ const File_Name_Key = "name"
 const File_Local_Path_Key = "local_path"
 const File_Size_Key = "size"
 const Folder_Path_Key = "path"
-const File_Path_Key = "path"
+const File_Path_Key = "fileKey"
 const Folder_Uuid_Key = "parent_uuid"
 const File_Parent_Key = "parent"
 const File_Src_Key = "src"            // 文件复制原地址
@@ -34,5 +34,6 @@ const Share_Code = "code"
 const Share_Expire_Time = "expire_at"
 
 // 传输
+const Trans_Uuid_Key = "trans_uuid"
 const Trans_Isdown_Key = "isdown"
 const Trans_Status_Key = "status"

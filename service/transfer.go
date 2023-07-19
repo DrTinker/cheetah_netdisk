@@ -48,7 +48,9 @@ func UploadConsumerMsg(msg []byte) bool {
 }
 
 func UploadProduceMsg(data *models.TransferMsg) error {
+	// TODO rabbit 不可用问题研究
 	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.Routing_Key)
+	defer client.GetMQClient().ReleaseChannel(setting)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
 	}

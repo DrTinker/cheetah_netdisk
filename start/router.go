@@ -25,6 +25,8 @@ func RegisterRouter(r *gin.Engine) {
 	{
 		t.GET("/info", middleware.JWT(true), trans.GetTransListHandler)
 
+		t.POST("/del", middleware.JWT(true), trans.DelTransRecordHandler)
+
 		t.POST("/upload/total", middleware.JWT(true), middleware.FileCheck(), trans.UploadHandler)
 		t.POST("/upload/init", middleware.JWT(true), trans.InitUploadHandler)
 		t.POST("/upload/part", middleware.JWT(true), trans.UploadPartHandler)
