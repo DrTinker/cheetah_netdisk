@@ -60,31 +60,20 @@ func SplitFilePath(path string) (name, ext string, err error) {
 	if len(path) == 0 || !strings.Contains(path, "/") {
 		return "", "", conf.FilePathError
 	}
-	// 判断时文件还是文件夹
-	isFolder := strings.HasSuffix(path, "/")
 	// 切分
 	names := strings.Split(path, "/")
 	if len(names) == 0 {
 		return "", "", conf.FilePathError
 	}
-	name = names[len(names)-1]
-	// 是文件
-	if !isFolder {
-		part := strings.Split(name, ".")
-		name = part[0]
-		ext = part[1]
-	} else {
-		// 是文件夹
-		// 文件夹切分后最后一个是空字符串
-		name = names[len(names)-2]
-		ext = conf.Folder_Default_EXT
-	}
+	fullName := names[len(names)-1]
+	name, ext, err = SplitFileFullName(fullName)
 
-	return name, ext, nil
+	return name, ext, err
 }
 
 // 切分name.ext -> name ext
 func SplitFileFullName(fullName string) (name string, ext string, err error) {
+	// TODO 文件夹判断不准确 com.example.aaa也可是文件夹名称，需要前端传入ext
 	// 是文件夹则增加默认文件夹扩展名
 	if !strings.Contains(fullName, ".") {
 		fullName = fullName + "." + conf.Folder_Default_EXT

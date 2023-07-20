@@ -8,10 +8,14 @@ import (
 )
 
 type MediaClientImpl struct {
+	// filter *models.MediaFilter
 }
 
 func NewMediaClient() (*MediaClientImpl, error) {
-	return &MediaClientImpl{}, nil
+
+	return &MediaClientImpl{
+		//filter: filter,
+	}, nil
 }
 
 func (m *MediaClientImpl) GetPicThumbNail(picPath, compressPath string) (err error) {

@@ -21,11 +21,18 @@ func UploadConsumerMsg(msg []byte) bool {
 		return false
 	}
 	// 根据msg读取本地文件上传cos
-	err = client.GetCOSClient().UpLoadLocalFile(data.Des, data.Src)
+	err = client.GetCOSClient().UpLoadLocalFile(data.FileKey, data.TmpPath)
 	if err != nil {
 		log.Error("[UploadConsumerMsg] upload cos error: ", err)
 		return false
 	}
+	// 读取缩略图上传
+	err = client.GetCOSClient().UpLoadLocalFile(data.TnFileKey, data.Thumbnail)
+	// 没有缩略图只提示
+	if err != nil {
+		log.Warn("[UploadConsumerMsg] upload thumbnail cos error: ", data.FileKey, err)
+	}
+
 	// 修改数据表
 	err = client.GetDBClient().UpdateFileStoreTypeByHash(data.FileHash, data.StoreType)
 	if err != nil {
@@ -38,12 +45,17 @@ func UploadConsumerMsg(msg []byte) bool {
 		return false
 	}
 	// 删除tmp下文件
-	err = helper.DelFile(data.Src)
+	err = helper.DelFile(data.TmpPath)
 	if err != nil {
 		log.Error("[UploadConsumerMsg] remove tmp file error: ", err)
 		return false
 	}
-	log.Info("[UploadConsumerMsg] transfer file ", data.Src, " success")
+	// 删除tmp下缩略图，错误只提示不返回
+	err = helper.DelFile(data.Thumbnail)
+	if err != nil {
+		log.Warn("[UploadConsumerMsg] remove thumbnail error: ", data.FileKey, err)
+	}
+	log.Info("[UploadConsumerMsg] transfer file ", data.TmpPath, " success")
 	return true
 }
 
@@ -62,6 +74,6 @@ func UploadProduceMsg(data *models.TransferMsg) error {
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] publish msg error: ")
 	}
-	log.Info("[UploadProduceMsg] send msg ", data.Src, " success")
+	log.Info("[UploadProduceMsg] send msg ", data.TmpPath, " success")
 	return nil
 }

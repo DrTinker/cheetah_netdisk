@@ -107,7 +107,8 @@ const Transfer_COS_Queue_Err = "cheetah_netdesk_trans_cos_err"
 const Default_Content_Type = "text/plain"
 
 // 文件存储
-const Default_System_Prefix = "test"         // 文件系统根目录，未来替换为root
+const Default_System_Prefix = "test" // 文件系统根目录，未来替换为root
+const Default_Thumbnail_Prefix = "thumbnail"
 const Default_System_parent = 0              // root对应ID
 const Default_Sign_Expire = time.Minute * 15 // 签名默认有效时间
 const Store_Type_COS = 0                     // 存储类型
@@ -120,3 +121,5 @@ const Default_Page_Size = 10
 
 // 媒体处理
 const Default_ThumbNail_Scale = "320x240"
+const Default_ThumbNail_Frame = 24 // 视频缩略图截取帧，为第二秒的第一帧
+const Default_Thumbnail_Ext = "jpg"

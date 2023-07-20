@@ -14,6 +14,7 @@ type File struct { // file中的一条记录唯一对应一个COS中的实际文
 	Hash       string // 哈希值判断文件存在性
 	Ext        string // 文件扩展名
 	File_Key   string // 文件路径，即COS中的唯一KEY, 为test/hash.ext(测试阶段)或root/hash.ext(正式阶段)
+	Thumbnail  string // 文件缩略图存储路径
 	Size       int    // 文件大小
 	Link       int    `json:"-"` // 文件引用数
 	Store_Type int    // 存储类型 0: cos 1: tmp 2: local
@@ -40,6 +41,8 @@ type UserFileShow struct {
 	User_Uuid string // 用户uuid
 	Ext       string // 文件扩展名
 	Name      string // 文件名称
+	Size      int    // 文件大小
+	Thumbnail string // 缩略图地址
 	CreatedAt string
 	UpdatedAt string
 }
@@ -60,8 +63,10 @@ type TransferSetting struct {
 type TransferMsg struct {
 	UploadID  string // 上传ID唯一
 	FileHash  string
-	Src       string // 本地存储路径
-	Des       string // cos filekey
+	TmpPath   string // 本地存储路径
+	FileKey   string // cos filekey
+	Thumbnail string // 缩略图
+	TnFileKey string // 缩略图存储fileKey
 	StoreType int    // 0：cos 1：本地
 }
 
@@ -78,4 +83,16 @@ type UploadPartInfo struct {
 type BatchTaskInfo struct {
 	Des string   // 目标文件夹uuid
 	Src []string // 要操作文件uuid列表
+}
+
+type MediaFilter struct {
+	PicFilter map[string]bool //{"jpg", "jpeg", "png", "gif"}
+	// FLV 、AVI、MOV、MP4、WMV
+	VideoFilter map[string]bool //{"mp4", "flv", "avi", "mov", "wmv"}
+	// MP3，WMA，WAV，APE，FLAC，OGG，AAC
+	AideoFilter map[string]bool //{"mp3", "wma", "wav", "ape", "flac", "ogg", "aac"}
+	// rar、zip、arj、tar
+	PackFilter map[string]bool //{"rar", "zip", "arj", "tar", "gz"}
+	// execel ppt doc docx md txt
+	DocFilter map[string]bool //{"execel", "ppt", "doc", "docx", "md", "txt"}
 }

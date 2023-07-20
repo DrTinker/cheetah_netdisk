@@ -40,6 +40,13 @@ func GenFileKey(hash, ext string) string {
 	return fmt.Sprintf("%s/%s.%s", conf.Default_System_Prefix, hash, ext)
 }
 
+func GenThumbnailKey(name string) string {
+	if name == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s", conf.Default_Thumbnail_Prefix, name)
+}
+
 // 生成uploadID
 func GenUploadID(user, hash string) string {
 	u := uuid.NewV4()

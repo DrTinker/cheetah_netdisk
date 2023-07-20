@@ -229,7 +229,7 @@ func CompleteUploadPart(uploadID string) (*models.TransObjectParams, string, err
 		return nil, "", errors.Wrap(err, "[CompleteUploadPart] get loacl config error: ")
 	}
 	src := fmt.Sprintf("%s/%s/", cfg.TmpPath, uploadID)
-	des := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, param.Name, param.Ext)
+	des := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, param.Hash, param.Ext)
 	_, err = helper.MergeFile(src, des)
 	desFlag, _ := helper.PathExists(des)
 	// 如果分片文件夹不存在 且 目标文件也不存在

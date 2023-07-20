@@ -67,12 +67,19 @@ func UploadFileByStream(param *models.TransObjectParams, data []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "[UploadFileByStream] store file to local error: ")
 	}
+	// 生成缩略图
+	tmpPath := fmt.Sprintf("%s/%s", cfg.TmpPath, filename)
+	tnPath, tnName := MediaHandler(tmpPath, ext)
+	tnFileKey := helper.GenThumbnailKey(tnName)
+	fileDB.Thumbnail = tnFileKey
 	// 写mq
 	msg := &models.TransferMsg{
 		UploadID:  param.UploadID,
 		FileHash:  hash,
-		Src:       cfg.TmpPath + "/" + filename,
-		Des:       fileKey,
+		TmpPath:   tmpPath,
+		FileKey:   fileKey,
+		Thumbnail: tnPath,
+		TnFileKey: tnFileKey,
 		StoreType: conf.Store_Type_COS,
 	}
 	err = UploadProduceMsg(msg)
@@ -148,15 +155,22 @@ func UploadFileByPath(param *models.TransObjectParams, path string) error {
 		Name:      name,
 		Ext:       ext,
 	}
+	// 生成缩略图
+	src := path
+	tnPath, tnName := MediaHandler(src, ext)
+	tnFileKey := helper.GenThumbnailKey(tnName)
+	fileDB.Thumbnail = tnFileKey
 	// 写mq
-	data := &models.TransferMsg{
+	msg := &models.TransferMsg{
 		UploadID:  param.UploadID,
 		FileHash:  hash,
-		Src:       path,
-		Des:       fileKey,
+		TmpPath:   path,
+		FileKey:   fileKey,
+		Thumbnail: tnPath,
+		TnFileKey: tnFileKey,
 		StoreType: conf.Store_Type_COS,
 	}
-	err := UploadProduceMsg(data)
+	err := UploadProduceMsg(msg)
 	if err != nil {
 		return errors.Wrap(err, "[UploadFileByPath] send msg to MQ error: ")
 	}

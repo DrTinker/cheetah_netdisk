@@ -17,6 +17,7 @@ func init() {
 	start.InitMsg() // 邮件系统
 	start.InitCOS() //对象存储
 	start.InitMQ()
+	start.InitMedia() // 媒体文件处理
 }
 
 func main() {
