@@ -11,5 +11,5 @@ func InitMsg() {
 		panic(err)
 	}
 
-	client.InitMsglient(impl)
+	client.InitMsgClient(impl)
 }

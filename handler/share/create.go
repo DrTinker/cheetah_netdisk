@@ -5,6 +5,7 @@ import (
 	"NetDesk/helper"
 	"NetDesk/models"
 	"NetDesk/service"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,14 +17,14 @@ import (
 )
 
 // 创建分享链接
-func CreateShareHandler(c *gin.Context) {
+func SetShareHandler(c *gin.Context) {
 	// 获取用户uuid
 	var user_uuid string
 	if idstr, f := c.Get(conf.User_ID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {
-		log.Error("CreateShareHandler user uuid empty")
+		log.Error("SetShareHandler user uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -50,33 +51,55 @@ func CreateShareHandler(c *gin.Context) {
 		})
 		return
 	}
-	// 获取过期时间并转化
-	expireStr := c.PostForm(conf.Share_Expire_Time)
-	expire, err := time.Parse("2006-01-02 15:04:05", expireStr)
-	if err != nil {
-		log.Error("CreateShareHandler expire_time invaild")
+	// 获取code
+	fullName := c.PostForm(conf.Share_Name)
+	if fullName == "" {
+		log.Error("CreateShareHandler name empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
 		return
 	}
-	// 生成share uuid
-	share_uuid := helper.GenSid(user_uuid, code)
+	// 获取过期时间并转化
+	expireStr := c.PostForm(conf.Share_Expire_Time)
+	var expire sql.NullTime
+	if expireStr != "" {
+		tmpExpire, err := time.Parse("2006-01-02 15:04:05", expireStr)
+		if err != nil {
+			log.Error("CreateShareHandler expire_time invaild")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.HTTP_INVALID_PARAMS_CODE,
+				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+			})
+			return
+		}
+		expire = sql.NullTime{Time: tmpExpire, Valid: true}
+	}
+
+	var share_uuid string
+	// 看是否传入
+	share_uuid = c.PostForm(conf.Share_Uuid)
+	if share_uuid == "" {
+		// 没传入则生成生成share uuid
+		share_uuid = helper.GenSid(user_uuid, code)
+	}
+
 	// 封装结构体
 	param := &models.CreateShareParams{
 		Share_Uuid:     share_uuid,
 		User_Uuid:      user_uuid,
 		User_File_Uuid: user_file_uuid,
+		Fullname:       fullName,
 		Code:           code,
 		Expire:         expire,
 	}
 	// 调用service层
-	err = service.CreateShareLink(param)
+	err := service.SetShareLink(param)
 	if err != nil {
 		log.Error("CreateShareHandler create share record err ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_CREATE_SHARE_CODE,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.CREATE_SHARE_FAIL_MESSAGE,
 		})
 		return
@@ -84,7 +107,7 @@ func CreateShareHandler(c *gin.Context) {
 	// 成功
 	log.Info("CreateShareHandler success: ", share_uuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":     conf.SUCCESS_RESP_MESSAGE,
+		"code":     conf.HTTP_SUCCESS_CODE,
 		"msg":      conf.SUCCESS_RESP_MESSAGE,
 		"share_id": share_uuid,
 	})
@@ -135,15 +158,20 @@ func CreateShareBatchHandler(c *gin.Context) {
 		return
 	}
 	// 获取过期时间并转化
+	// 获取过期时间并转化
 	expireStr := c.PostForm(conf.Share_Expire_Time)
-	expire, err := time.Parse("2006-01-02 15:04:05", expireStr)
-	if err != nil {
-		log.Error("CreateShareBatchHandler expire_time invaild")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.HTTP_INVALID_PARAMS_CODE,
-			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
-		})
-		return
+	var expire sql.NullTime
+	if expireStr != "" {
+		tmpExpire, err := time.Parse("2006-01-02 15:04:05", expireStr)
+		if err != nil {
+			log.Error("CreateShareHandler expire_time invaild")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": conf.HTTP_INVALID_PARAMS_CODE,
+				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+			})
+			return
+		}
+		expire = sql.NullTime{Time: tmpExpire, Valid: true}
 	}
 	// 生成share uuid
 	share_uuid := helper.GenSid(user_uuid, code)
@@ -177,7 +205,7 @@ func CreateShareBatchHandler(c *gin.Context) {
 		Expire:         expire,
 	}
 	// 调用service层
-	err = service.CreateShareLink(param)
+	err = service.SetShareLink(param)
 	if err != nil {
 		log.Error("CreateShareBatchHandler create share record err ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{

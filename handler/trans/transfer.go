@@ -14,7 +14,7 @@ func TransferObjectHandler() {
 	if err != nil {
 		logrus.Error("[TransferObjectHandler] init channel error: %v", err)
 	}
-	err = client.GetMQClient().Consume(setting, conf.Transfer_COS_Queue, "transfer_consumer", service.UploadConsumerMsg)
+	err = client.GetMQClient().Consume(setting, conf.Transfer_COS_Queue, "transfer_consumer", service.TransferConsumerMsg)
 	if err != nil {
 		logrus.Error("[TransferObjectHandler] init channel error: %v", err)
 	}

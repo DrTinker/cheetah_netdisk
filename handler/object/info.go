@@ -54,12 +54,29 @@ func GetFileListHandler(c *gin.Context) {
 	}
 	// 处理数据
 	show := make([]*models.UserFileShow, len(files))
+	// 生成缩略图桶前缀
+	cfg, err := client.GetConfigClient().GetCOSConfig()
+	if cfg == nil || err != nil {
+		log.Error("GetFileListHandler err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.LIST_FILES_FAIL_MESSAGE,
+		})
+	}
+	// 生成结构体
 	for i, file := range files {
+		tn := ""
+		if file.Thumbnail != "" {
+			tn = cfg.Domain + "/" + file.Thumbnail
+		}
 		show[i] = &models.UserFileShow{}
 		show[i].Uuid = file.Uuid
 		show[i].User_Uuid = file.User_Uuid
 		show[i].Name = file.Name
 		show[i].Ext = file.Ext
+		show[i].Thumbnail = tn
+		show[i].Size = file.Size
+		show[i].Hash = file.Hash
 		show[i].CreatedAt = helper.TimeFormat(file.CreatedAt)
 		show[i].UpdatedAt = helper.TimeFormat(file.UpdatedAt)
 	}
@@ -72,11 +89,11 @@ func GetFileListHandler(c *gin.Context) {
 	})
 }
 
-func GetFileInfoByPathHandler(c *gin.Context) {
+func GetFileInfoHandler(c *gin.Context) {
 	// 获取路径
-	path := c.Query(conf.File_Path_Key)
-	if path == "" {
-		log.Error("GetFileInfoByPathHandler err: invaild path")
+	user_file_uuid := c.Query(conf.File_Uuid_Key)
+	if user_file_uuid == "" {
+		log.Error("GetFileInfoHandler err: invaild id")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -84,20 +101,43 @@ func GetFileInfoByPathHandler(c *gin.Context) {
 		return
 	}
 	// 获取文件数据
-	user_file, err := client.GetDBClient().GetUserFileByPath(path)
+	file, err := client.GetDBClient().GetUserFileByUuid(user_file_uuid)
 	if err != nil {
-		log.Error("GetFileInfoByPathHandler: get user file error ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_GET_INFO_CODE,
+		log.Error("GetFileInfoHandler: get user file error ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.GET_INFO_FAIL_MESSAGE,
 		})
 		return
 	}
+	// 生成缩略图桶前缀
+	cfg, err := client.GetConfigClient().GetCOSConfig()
+	if cfg == nil || err != nil {
+		log.Error("GetFileListHandler err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.LIST_FILES_FAIL_MESSAGE,
+		})
+	}
+	tn := ""
+	if file.Thumbnail != "" {
+		tn = cfg.Domain + "/" + file.Thumbnail
+	}
+	show := &models.UserFileShow{}
+	show.Uuid = file.Uuid
+	show.User_Uuid = file.User_Uuid
+	show.Name = file.Name
+	show.Ext = file.Ext
+	show.Thumbnail = tn
+	show.Size = file.Size
+	show.Hash = file.Hash
+	show.CreatedAt = helper.TimeFormat(file.CreatedAt)
+	show.UpdatedAt = helper.TimeFormat(file.UpdatedAt)
 	// 成功
-	log.Info("GetFileInfoByPathHandler: get user file success, path: ", path)
-	c.JSON(http.StatusBadRequest, gin.H{
+	log.Info("GetFileInfoHandler: get user file success: ", user_file_uuid)
+	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,
-		"info": user_file,
+		"info": show,
 	})
 }

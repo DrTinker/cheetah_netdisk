@@ -16,6 +16,12 @@ func init() {
 }
 
 func main() {
-	fmt.Printf("running transfer service")
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("Runtime panic caught: %v\n", err)
+		}
+	}()
+	fmt.Printf("running transfer service\n")
+
 	trans.TransferObjectHandler()
 }

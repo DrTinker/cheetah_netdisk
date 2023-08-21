@@ -63,6 +63,7 @@ func Strval(value interface{}) string {
 }
 
 func TimeFormat(t time.Time) string {
-	var timeLayoutStr = "2006-01-02 15:04:05" //go中的时间格式化必须是这个时间
+	// var timeLayoutStr = "2006-01-02 15:04:05" //go中的时间格式化必须是这个时间
+	var timeLayoutStr = "2006-01-02" //go中的时间格式化必须是这个时间
 	return t.Format(timeLayoutStr)
 }

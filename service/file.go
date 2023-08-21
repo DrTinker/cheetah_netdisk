@@ -3,11 +3,8 @@ package service
 import (
 	"NetDesk/client"
 	"NetDesk/conf"
-	"NetDesk/helper"
 	"NetDesk/models"
-	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -65,6 +62,8 @@ func CopyObject(src_uuid, des_parent_uuid, user_uuid string) error {
 		}
 		// 复制文件夹下所有文件
 		for _, f := range fList {
+			// 更改文件夹下每个文件的归属
+			f.User_Uuid = user_uuid
 			if _, err := client.GetDBClient().CopyUserFile(f, new_des_id); err != nil {
 				return errors.Wrap(err, fmt.Sprintf("[CopyObject] copy file: %s, err: ", f.Uuid))
 			}
@@ -196,88 +195,7 @@ func deleteHelper(user_file_uuid, file_uuid string) error {
 	if err := client.GetDBClient().DeleteUploadRecord(file_uuid, user_file_uuid); err != nil {
 		return errors.Wrap(err, "[DeleteObject] delete db record error: ")
 	}
+	// 删除分享表数据 忽略错误
+	client.GetDBClient().DeleteShareByUserFileUuid(user_file_uuid)
 	return nil
-}
-
-// 分块上传
-// 初始化分块上传，返回UploadID并写入redis
-func InitUploadPart(param *models.TransObjectParams) (*models.InitTransResult, error) {
-	user_uuid := param.User_Uuid
-	hash := param.Hash
-	size := param.Size
-	uploadID := param.UploadID
-
-	res := &models.InitTransResult{}
-	// 生成id
-	if param.UploadID == "" {
-		uploadID = helper.GenUploadID(user_uuid, hash)
-	}
-	infoKey := helper.GenTransPartInfoKey(uploadID)
-	count := size/conf.File_Part_Size_Max + 1
-	// 尝试获取分片信息，如果存在则说明之前上传过，触发断点续传逻辑
-	tmpInfo, err := client.GetCacheClient().HGetAll(infoKey)
-	var chunkList []int
-	if tmpInfo != nil && err == nil {
-		// 记录已经上传的分片
-		for k, _ := range tmpInfo {
-			if i, err := strconv.Atoi(k); err == nil {
-				chunkList = append(chunkList, i)
-			}
-		}
-		res.ChunkCount = count
-		res.ChunkList = chunkList
-		res.UploadID = tmpInfo[conf.Upload_Part_Info_ID_Key]
-		return res, nil
-	}
-	// 未上传过或者redis中key已过期
-	// 生成分块上传信息
-	fileInfo, err := json.Marshal(param)
-	if err != nil {
-		return nil, errors.Wrap(err, "[InitUploadPart] parse file info error: ")
-	}
-	info := map[string]interface{}{
-		conf.Upload_Part_Info_ID_Key:     uploadID,
-		conf.Upload_Part_Info_CSize_Key:  conf.File_Part_Size_Max,
-		conf.Upload_Part_Info_CCount_Key: count,
-		conf.Upload_Part_File_Info_Key:   string(fileInfo),
-	}
-	// 写redis
-	err = client.GetCacheClient().HMSet(infoKey, info)
-	if err != nil {
-		return nil, errors.Wrap(err, "[InitUploadPart] set upload info error: ")
-	}
-	err = client.GetCacheClient().Expire(infoKey, conf.Upload_Part_Slice_Expire)
-	if err != nil {
-		return nil, errors.Wrap(err, "[InitUploadPart] set upload info error: ")
-	}
-	res.ChunkCount = count
-	res.ChunkList = chunkList
-	res.UploadID = uploadID
-	return res, nil
-}
-
-// 下载至tmp
-func DownloadToTmp(user_file_uuid string) (string, error) {
-	// 通过uuid查询文件信息
-	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(user_file_uuid)
-	if err != nil {
-		return "", err
-	}
-	// 切分fileKey获取hash&ext
-	hash, ext, err := helper.SplitFilePath(fileKey)
-	if err != nil {
-		return "", errors.Wrap(err, "[DownloadFile] parse fileKey err ")
-	}
-	// 通过fileKey从COS下载文件
-	cfg, err := client.GetConfigClient().GetLocalConfig()
-	if err != nil {
-		return "", errors.Wrap(err, "[DownloadFile] get config err ")
-	}
-	path := fmt.Sprintf("%s/%s.%s", cfg.TmpPath, hash, ext)
-	err = client.GetCOSClient().DownloadLocal(fileKey, path)
-	if err != nil {
-		return "", err
-	}
-
-	return path, nil
 }

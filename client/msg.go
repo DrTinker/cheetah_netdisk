@@ -18,7 +18,7 @@ func GetMsgClient() MsgClient {
 	return msgClient
 }
 
-func InitMsglient(client MsgClient) {
+func InitMsgClient(client MsgClient) {
 	MsgOnce.Do(
 		func() {
 			msgClient = client

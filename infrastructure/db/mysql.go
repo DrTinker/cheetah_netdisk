@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
@@ -91,6 +92,16 @@ func (d *DBClientImpl) GetUserVolume(id string) (now, total int64, err error) {
 	return user.Now_Volume, user.Total_Volume, nil
 }
 
+// 更改用户名
+func (d DBClientImpl) UpdateUserName(uuid, name string) error {
+	err := d.DBConn.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", uuid).
+		Update(conf.User_Name_DB, name).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateUserName update user name err: ")
+	}
+	return nil
+}
+
 // 文件
 // 检测文件存在性,false表示不存在
 func (d *DBClientImpl) CheckFileExist(hash string) (bool, string, error) {
@@ -105,7 +116,7 @@ func (d *DBClientImpl) CheckFileExist(hash string) (bool, string, error) {
 	return true, file.Uuid, nil
 }
 
-func (d *DBClientImpl) CheckUserFileExist(file_uuid, user_uuid string) (bool, error) {
+func (d *DBClientImpl) CheckUserFileExist(user_uuid, file_uuid string) (bool, error) {
 	user_file := &models.UserFile{}
 	err := d.DBConn.Table(conf.User_File_TB).Where(&models.UserFile{File_Uuid: file_uuid, User_Uuid: user_uuid}).
 		First(user_file).Error
@@ -122,15 +133,6 @@ func (d *DBClientImpl) CheckUserFileExist(file_uuid, user_uuid string) (bool, er
 func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.UserFile) error {
 	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		// 从这里开始使用 'tx' 而不是 'db'
-		// user_file表增加记录
-		if err := tx.Table(conf.User_File_TB).Create(userFile).Error; err != nil {
-			// 返回任何错误都会回滚事务
-			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Create user file err:")
-		}
-		// file_pool表增加记录
-		if err := tx.Table(conf.File_Pool_TB).Create(file).Error; err != nil {
-			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Create file err:")
-		}
 		// 检查文件大小
 		user := &models.User{}
 		err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).First(user).Error
@@ -140,6 +142,15 @@ func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.Us
 		cur := user.Now_Volume + int64(file.Size)
 		if user.Total_Volume < cur+int64(file.Size) {
 			return conf.VolumeError
+		}
+		// user_file表增加记录
+		if err := tx.Table(conf.User_File_TB).Create(userFile).Error; err != nil {
+			// 返回任何错误都会回滚事务
+			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Create user file err:")
+		}
+		// file_pool表增加记录
+		if err := tx.Table(conf.File_Pool_TB).Create(file).Error; err != nil {
+			return errors.Wrap(err, "[DBClientImpl] CreateUploadRecord Create file err:")
 		}
 		// 更新用户空间大小
 		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).
@@ -181,8 +192,15 @@ func (d *DBClientImpl) CreateQuickUploadRecord(userFile *models.UserFile, size i
 func (d *DBClientImpl) DeleteUploadRecord(file_uuid, user_file_uuid string) error {
 	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		userFile := &models.UserFile{}
-		// user_file表删除记录，软删除
-		if err := tx.Table(conf.User_File_TB).Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Delete(userFile).Error; err != nil {
+		// 先查询user_file，mysql不支持returning
+		err := tx.Table(conf.User_File_TB).
+			Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Find(userFile).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid get user file err:")
+		}
+		// user_file表删除记录，软删除, 返回被删除的列
+		if err := tx.Table(conf.User_File_TB).
+			Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Delete(userFile).Error; err != nil {
 			// 返回任何错误都会回滚事务
 			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
 		}
@@ -191,6 +209,11 @@ func (d *DBClientImpl) DeleteUploadRecord(file_uuid, user_file_uuid string) erro
 		if err := tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).Unscoped().Delete(file).Error; err != nil {
 			// 返回任何错误都会回滚事务
 			return errors.Wrap(err, "[DBClientImpl] DeleteUploadRecord delete user file err:")
+		}
+		// 更新用户空间大小
+		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", userFile.User_Uuid).
+			Update(conf.User_Now_Volume_DB, gorm.Expr(conf.User_Now_Volume_DB+"-?", userFile.Size)).Error; err != nil {
+			return errors.Wrap(err, "[DBClientImpl] CreateQuickUploadRecord Update user err:")
 		}
 		return nil
 	})
@@ -266,7 +289,7 @@ func (d *DBClientImpl) GetUserFileByPath(path string) (user_file *models.UserFil
 	ufid := conf.User_File_Pool_UUID_DB
 	// select * from "user_file" inner join "file_pool" on ("user_file".file_uuid = "file_pool".uuid) where "file_pool".path = path
 	err = d.DBConn.Table(conf.User_File_TB).Joins(fmt.Sprintf("inner join %s on %s.%s = %s.%s", ft, ft, fid, uft, ufid)).
-		Where(fmt.Sprintf("%s.%s=?", ft, conf.File_Path_DB), path).First(user_file).Error
+		Where(fmt.Sprintf("%s.%s=?", ft, conf.File_FileKey_DB), path).First(user_file).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "[DBClientImpl] GetUserFileByPath err:")
 	}
@@ -322,10 +345,12 @@ func (d *DBClientImpl) CopyUserFile(src_file *models.UserFile, des_parent_id int
 		Parent_Id: des_parent_id,
 		Name:      src_file.Name,
 		Ext:       src_file.Ext,
+		Size:      src_file.Size,
+		Thumbnail: src_file.Thumbnail,
+		Hash:      src_file.Hash,
 		User_Uuid: src_file.User_Uuid,
 		File_Uuid: src_file.File_Uuid,
 	}
-	// TODO 增加用户空间大小
 	// 复制文件
 	if err := d.DBConn.Transaction(func(tx *gorm.DB) error {
 		// 复制user_file记录
@@ -379,9 +404,16 @@ func (d *DBClientImpl) UpdateUserFileName(name, ext, uuid string) error {
 // 删除单个用户文件，用于移动和删除
 func (d *DBClientImpl) DeleteUserFileByUuid(user_file_uuid, file_uuid string) error {
 	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
-		file := &models.UserFile{}
-		// 返回被删除的行
-		err := d.DBConn.Table(conf.User_File_TB).Where(conf.File_UUID_DB+"=?", user_file_uuid).Delete(file).Error
+		user_file := &models.UserFile{}
+		// 先查询user_file，mysql不支持returning
+		err := tx.Table(conf.User_File_TB).
+			Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Find(user_file).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid get user file err:")
+		}
+		// 删除
+		err = tx.Table(conf.User_File_TB).
+			Where(conf.User_File_UUID_DB+"=?", user_file_uuid).Delete(user_file).Error
 		if err != nil {
 			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid delete user file err:")
 		}
@@ -390,10 +422,15 @@ func (d *DBClientImpl) DeleteUserFileByUuid(user_file_uuid, file_uuid string) er
 			return nil
 		}
 		// 如果是文件则还需修改引用指针数量
-		err = d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).
+		err = tx.Table(conf.File_Pool_TB).Where(conf.File_UUID_DB+"=?", file_uuid).
 			Update(conf.File_Link_DB, gorm.Expr(conf.File_Link_DB+"+?", -1)).Error
 		if err != nil {
 			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid update link err:")
+		}
+		// 还要更新用户空间大小
+		if err := tx.Table(conf.User_TB).Where(conf.User_UUID_DB+"=?", user_file.User_Uuid).
+			Update(conf.User_Now_Volume_DB, gorm.Expr(conf.User_Now_Volume_DB+"-?", user_file.Size)).Error; err != nil {
+			return errors.Wrap(err, "[DBClientImpl] DeleteUserFileByUuid Update user err:")
 		}
 		return nil
 	})
@@ -451,9 +488,9 @@ func (d *DBClientImpl) GetFileKeyByUserFileUuid(uuid string) (fileKey string, er
 	ufid := conf.User_File_Pool_UUID_DB
 	// select "path" from "file_pool" inner join "user_file" on ("user_file".file_uuid = "file_pool".uuid) where "user_file".uuid = uuid
 	err = d.DBConn.Table(conf.File_Pool_TB).Joins(fmt.Sprintf("inner join %s on %s.%s = %s.%s", uft, ft, fid, uft, ufid)).
-		Where(fmt.Sprintf("%s.%s=?", uft, conf.User_File_UUID_DB), uuid).Select(conf.File_Path_DB).First(file).Error
+		Where(fmt.Sprintf("%s.%s=?", uft, conf.User_File_UUID_DB), uuid).Select(conf.File_FileKey_DB).First(file).Error
 	if err != nil {
-		return "", errors.Wrap(err, "[DBClientImpl] GetUserFileByPath err:")
+		return "", errors.Wrap(err, "[DBClientImpl] GetFileKeyByUserFileUuid err:")
 	}
 	return file.File_Key, nil
 }
@@ -476,30 +513,31 @@ func (d *DBClientImpl) UpdateFileStoreTypeByHash(hash string, t int) error {
 }
 
 // 创建分享链接
-func (d *DBClientImpl) CreateShare(share *models.Share) error {
-	err := d.DBConn.Table(conf.Share_TB).Create(share).Error
-	if err != nil {
-		return errors.Wrap(err, "[DBClientImpl] CreateShare err:")
-	}
-	return nil
-}
-
-// 批量创建
-func (d *DBClientImpl) CreateShareBatch(shares []*models.Share) error {
-	err := d.DBConn.Table(conf.Share_TB).CreateInBatches(shares, 100).Error
-	if err != nil {
-		return errors.Wrap(err, "[DBClientImpl] CreateShareBatch err:")
-	}
-	return nil
+func (d *DBClientImpl) SetShare(share *models.Share) error {
+	err := d.DBConn.Transaction(func(tx *gorm.DB) error {
+		// 先删除原来的
+		err := tx.Table(conf.Share_TB).Where(conf.Share_UUID_DB+"=?", share.Uuid).Delete(share).Error
+		// 如果发生其他错误
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.Wrap(err, "[DBClientImpl] SetShare delete err:")
+		}
+		// 没找到或成功删除则插入新的
+		err = tx.Table(conf.Share_TB).Create(share).Error
+		if err != nil {
+			return errors.Wrap(err, "[DBClientImpl] SetShare create err:")
+		}
+		return err
+	})
+	return err
 }
 
 // 获取share
 func (d *DBClientImpl) GetShareByUuid(uuid string) (*models.Share, error) {
 	share := &models.Share{}
-	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB).First(share).Error
+	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB+"=?", uuid).First(share).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, conf.DBDeleteError
+			return nil, conf.DBNotFoundError
 		}
 		return nil, errors.Wrap(err, "[DBClientImpl] GetShareByUuid err:")
 	}
@@ -512,11 +550,51 @@ func (d *DBClientImpl) GetUserFileUuidByShareUuid(uuid string) (user_file_uuid s
 	err = d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB).Select(conf.Share_User_File_UUID_DB).First(share).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", conf.DBDeleteError
+			return "", conf.DBNotFoundError
 		}
 		return "", errors.Wrap(err, "[DBClientImpl] GetShareByUuid err:")
 	}
 	return share.User_File_Uuid, nil
+}
+
+// 更新share
+func (d *DBClientImpl) UpdateShareByUuid(uuid string, share *models.Share) error {
+	// map无论是否为0值都会更新
+	updateMap := map[string]interface{}{
+		"code":        share.Code,
+		"expire_time": share.Expire_Time,
+	}
+	err := d.DBConn.Model(&share).Updates(updateMap).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] UpdateShareByUuid err:")
+	}
+	return nil
+}
+
+// 获取share列表
+func (d *DBClientImpl) GetShareListByUser(user_uuid string, cur, pageSize, mod int) (shares []*models.Share, err error) {
+	// limit + offset实现分页查询
+	switch mod {
+	case conf.Share_All_Mod:
+		err = d.DBConn.Table(conf.Share_TB).
+			Where(conf.Share_User_Uuid_DB+"=?", user_uuid).
+			Limit(pageSize).Offset((cur - 1) * pageSize).Find(&shares).Error
+	case conf.Share_Expire_Mod:
+		err = d.DBConn.Table(conf.Share_TB).
+			Where(conf.Share_User_Uuid_DB+"=?", user_uuid).
+			Where(conf.Share_Expire_DB+">=?", time.Now()).
+			Limit(pageSize).Offset((cur - 1) * pageSize).Find(&shares).Error
+	case conf.Share_Out_Mod:
+		err = d.DBConn.Table(conf.Share_TB).
+			Where(conf.Share_User_Uuid_DB+"=?", user_uuid).
+			Where(conf.Share_Expire_DB+"<?", time.Now()).
+			Limit(pageSize).Offset((cur - 1) * pageSize).Find(&shares).Error
+	}
+	// 空说明错误
+	if shares == nil || err != nil {
+		return nil, errors.Wrap(err, "[DBClientImpl] GetShareListByUser err:")
+	}
+	return
 }
 
 // 删除share
@@ -529,12 +607,12 @@ func (d *DBClientImpl) DeleteShareByUuid(uuid string) error {
 	return nil
 }
 
-// TODO 修改clickNum
-func (d *DBClientImpl) UpdateClickNumByUuid(uuid string) error {
-	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_UUID_DB+"=?", uuid).
-		Update(conf.Share_Click_Num_DB, gorm.Expr(conf.Share_Click_Num_DB+"+?", 1)).Error
+// 通过userfile删除share
+func (d *DBClientImpl) DeleteShareByUserFileUuid(uuid string) error {
+	share := &models.Share{}
+	err := d.DBConn.Table(conf.Share_TB).Where(conf.Share_User_File_UUID_DB+"=?", uuid).Delete(share).Error
 	if err != nil {
-		return errors.Wrap(err, "[DBClientImpl] UpdateClickNumByUuid Update click err:")
+		return errors.Wrap(err, "[DBClientImpl] DeleteShareByUuid err:")
 	}
 	return nil
 }
@@ -588,6 +666,20 @@ func (d *DBClientImpl) GetTransListByUser(user_uuid string, cur, pageSize, mod, 
 func (d *DBClientImpl) DelTransByUuid(uuid string) error {
 	trans := &models.Trans{}
 	err := d.DBConn.Table(conf.Trans_TB).Where(conf.Trans_UUID_DB+"=?", uuid).Delete(trans).Error
+	if err != nil {
+		return errors.Wrap(err, "[DBClientImpl] DelTransByUuid err:")
+	}
+	return nil
+}
+
+// 根据状态和类别批量删除删除
+func (d *DBClientImpl) DelTransByStatus(user_uuid string, mod, status int) error {
+	trans := &models.Trans{}
+	err := d.DBConn.Table(conf.Trans_TB).
+		Where(conf.Trans_User_UUID_DB+"=?", user_uuid).
+		Where(conf.Trans_IsDown_DB+"=?", mod).
+		Where(conf.Trans_Status_DB+"=?", status).
+		Delete(trans).Error
 	if err != nil {
 		return errors.Wrap(err, "[DBClientImpl] DelTransByUuid err:")
 	}

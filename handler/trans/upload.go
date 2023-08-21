@@ -5,6 +5,7 @@ import (
 	"NetDesk/helper"
 	"NetDesk/models"
 	"NetDesk/service"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -61,7 +62,15 @@ func UploadHandler(c *gin.Context) {
 		})
 		return
 	}
-
+	remotePath := c.PostForm(conf.File_Remote_Path_Key)
+	if remotePath == "" {
+		log.Error("UploadHandler empty remote path")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
 	// 获取用户ID
 	var user_uuid string
 	if idstr, f := c.Get(conf.User_ID); f {
@@ -78,11 +87,14 @@ func UploadHandler(c *gin.Context) {
 	// 生成ID
 	file_uuid := helper.GenFid(fileKey)
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
+	uploadID := helper.GenUploadID(user_uuid, hash)
 	// 打包参数
-	param := &models.TransObjectParams{
+	param := &models.UploadObjectParams{
+		UploadID:       uploadID,
 		FileKey:        fileKey,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,
+		RemotePath:     remotePath,
 		Hash:           hash,
 		Size:           len(file),
 		Name:           name,
@@ -112,9 +124,9 @@ func UploadHandler(c *gin.Context) {
 		// 秒传直接返回
 		log.Info("UploadHandler success: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.QUICK_UPLOAD_CODE,
-			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-			"file_id": user_file_uuid,
+			"code":      conf.QUICK_UPLOAD_CODE,
+			"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+			"upload_id": uploadID,
 		})
 		return
 	}
@@ -131,9 +143,9 @@ func UploadHandler(c *gin.Context) {
 
 	log.Info("UploadHandler success: ", user_file_uuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":    conf.HTTP_SUCCESS_CODE,
-		"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-		"file_id": user_file_uuid,
+		"code":      conf.HTTP_SUCCESS_CODE,
+		"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+		"upload_id": uploadID,
 	})
 }
 
@@ -194,9 +206,19 @@ func InitUploadHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	local_path := c.PostForm(conf.File_Local_Path_Key)
-	if hash == "" {
+	localPath := c.PostForm(conf.File_Local_Path_Key)
+	if localPath == "" {
 		log.Error("InitUploadHandler invaild local path")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 云存储路径
+	remotePath := c.PostForm(conf.File_Remote_Path_Key)
+	if remotePath == "" {
+		log.Error("InitUploadHandler empty remote path")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -220,10 +242,11 @@ func InitUploadHandler(c *gin.Context) {
 	file_uuid := helper.GenFid(fileKey)
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
 	// 打包参数
-	param := &models.TransObjectParams{
+	param := &models.UploadObjectParams{
 		UploadID:       uploadID,
 		FileKey:        fileKey,
-		LocalPath:      local_path,
+		LocalPath:      localPath,
+		RemotePath:     remotePath,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,
 		Hash:           hash,
@@ -256,9 +279,9 @@ func InitUploadHandler(c *gin.Context) {
 		// 秒传直接返回
 		log.Info("InitUploadHandler success, file exist: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.QUICK_UPLOAD_CODE,
-			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-			"file_id": user_file_uuid,
+			"code":      conf.QUICK_UPLOAD_CODE,
+			"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+			"upload_id": info.UploadID,
 		})
 		return
 	}
@@ -385,6 +408,13 @@ func CompleteUploadPartHandler(c *gin.Context) {
 	err = service.UploadFileByPath(param, path)
 	if err != nil {
 		log.Error("CompleteUploadPartHandler service error: ", err)
+		if errors.Is(err, conf.ChunkMissError) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code": conf.CHUNK_MISS_CODE,
+				"msg":  conf.SERVER_ERROR_MSG,
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, param.Name+"."+param.Ext),

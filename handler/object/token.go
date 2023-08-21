@@ -30,6 +30,18 @@ func GetTokenHandler(c *gin.Context) {
 		})
 		return
 	}
+	// 读取配置完善url
+	cfg, err := client.GetConfigClient().GetCOSConfig()
+	if err != nil {
+		log.Error("GetTokenHandler err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_CODE,
+		})
+		return
+	}
+	url = cfg.Domain + url
+	// 成功
 	log.Info("GetTokenHandler success: ", fileKey)
 	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,

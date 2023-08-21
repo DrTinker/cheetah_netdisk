@@ -17,5 +17,6 @@ func InitMQ() {
 		panic(err)
 	}
 
+	impl.KeepAlive()
 	client.InitMQClient(impl)
 }

@@ -56,6 +56,14 @@ func GenUploadID(user, hash string) string {
 	return fmt.Sprintf("%x", id)
 }
 
+func GenDownloadID(user, user_file_uuid string) string {
+	u := uuid.NewV4()
+	str := u.String() + user + user_file_uuid
+	id := md5.Sum([]byte(str))
+
+	return fmt.Sprintf("%x", id)
+}
+
 // 生成share uuid
 func GenSid(user, code string) string {
 	u := uuid.NewV4()

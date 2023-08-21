@@ -31,6 +31,9 @@ type UserFile struct { // userfile中的一条记录唯一对应用户存储空�
 	File_Uuid string `json:"-"` // file表中的uuid，用于索引，前端不可见
 	Ext       string // 文件扩展名
 	Name      string // 文件名称
+	Size      int    // 文件大小
+	Thumbnail string // 文件缩略图存储路径
+	Hash      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
@@ -43,6 +46,7 @@ type UserFileShow struct {
 	Name      string // 文件名称
 	Size      int    // 文件大小
 	Thumbnail string // 缩略图地址
+	Hash      string
 	CreatedAt string
 	UpdatedAt string
 }
@@ -61,13 +65,14 @@ type TransferSetting struct {
 
 // 消息队列消息结构
 type TransferMsg struct {
-	UploadID  string // 上传ID唯一
+	TransID   string // 上传ID唯一
 	FileHash  string
 	TmpPath   string // 本地存储路径
 	FileKey   string // cos filekey
 	Thumbnail string // 缩略图
 	TnFileKey string // 缩略图存储fileKey
 	StoreType int    // 0：cos 1：本地
+	Task      int    // 0: 上传 1: 下载
 }
 
 // 分块上传结构体

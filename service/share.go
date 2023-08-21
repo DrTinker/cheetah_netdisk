@@ -2,14 +2,14 @@ package service
 
 import (
 	"NetDesk/client"
+	"NetDesk/conf"
+	"NetDesk/helper"
 	"NetDesk/models"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 // 创建链接
-func CreateShareLink(param *models.CreateShareParams) error {
+func SetShareLink(param *models.CreateShareParams) error {
 	// 解析参数
 	share_uuid := param.Share_Uuid
 	user_uuid := param.User_Uuid
@@ -27,12 +27,12 @@ func CreateShareLink(param *models.CreateShareParams) error {
 		User_Uuid:      user_uuid,
 		User_File_Uuid: user_file_uuid,
 		File_Uuid:      file_uuid,
+		Fullname:       param.Fullname,
 		Code:           code,
 		Expire_Time:    expire,
-		Click_Num:      0,
 	}
 	// 存数据库
-	err = client.GetDBClient().CreateShare(shareInfo)
+	err = client.GetDBClient().SetShare(shareInfo)
 	if err != nil {
 		return err
 	}
@@ -41,24 +41,44 @@ func CreateShareLink(param *models.CreateShareParams) error {
 }
 
 // 查询share
-func GetShareInfo(share_uuid string) (info *models.Share, time_out bool, err error) {
+func GetShareInfo(share_uuid string) (res *models.ShareShow, time_out bool, err error) {
 	// 通过uuid查询share信息
-	info, err = client.GetDBClient().GetShareByUuid(share_uuid)
+	info, err := client.GetDBClient().GetShareByUuid(share_uuid)
 	if err != nil {
 		return nil, false, err
 	}
+	// 查看文件是否被删除
+	flag, err := client.GetDBClient().GetUserFileByUuid(info.User_File_Uuid)
+	if err != nil {
+		return nil, false, err
+	}
+	if flag == nil {
+		return nil, true, conf.FileDeletedError
+	}
+	res = &models.ShareShow{
+		Uuid:           info.Uuid,
+		User_Uuid:      info.User_Uuid,
+		User_File_Uuid: info.User_File_Uuid,
+		Code:           info.Code,
+		Fullname:       info.Fullname,
+		Status:         conf.Share_Expire_Mod,
+		Expire_Time:    helper.TimeFormat(info.Expire_Time.Time),
+		CreatedAt:      helper.TimeFormat(info.CreatedAt),
+		UpdatedAt:      helper.TimeFormat(info.UpdatedAt),
+	}
+	// 没有过期时间视为永久有效
+	if !info.Expire_Time.Valid {
+		res.Expire_Time = ""
+	}
 	// 检查过期时间
 	now := time.Now()
-	if info.Expire_Time.Before(now) {
-		return info, true, nil
-	}
-	// 增加点击数，不像上层传递错误
-	err = client.GetDBClient().UpdateClickNumByUuid(share_uuid)
-	if err != nil {
-		logrus.Warn("[GetShareInfo] increase click err: ", share_uuid)
+	// 有过期时间且过期时间在当前时间之前
+	if info.Expire_Time.Valid && info.Expire_Time.Time.Before(now) {
+		res.Status = conf.Share_Out_Mod
+		return res, true, nil
 	}
 	// 未过期返回
-	return info, false, nil
+	return res, false, nil
 }
 
 // 通过分享获取文件
@@ -83,4 +103,49 @@ func CancelShare(share_uuid string) error {
 	}
 
 	return nil
+}
+
+// 取消分享
+func CancelBatchShare(cancelList []string) error {
+	for _, c := range cancelList {
+		err := client.GetDBClient().DeleteShareByUuid(c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// 获取用户分享列表
+func GetShareList(user_uuid string, cur, mod int) ([]*models.ShareShow, error) {
+	infos, err := client.GetDBClient().GetShareListByUser(user_uuid, cur, conf.Default_Page_Size, mod)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*models.ShareShow, len(infos))
+	for i, info := range infos {
+		tmp := &models.ShareShow{
+			Uuid:           info.Uuid,
+			User_Uuid:      info.User_Uuid,
+			User_File_Uuid: info.User_File_Uuid,
+			Code:           info.Code,
+			Fullname:       info.Fullname,
+			Status:         conf.Share_Expire_Mod,
+			Expire_Time:    helper.TimeFormat(info.Expire_Time.Time),
+			CreatedAt:      helper.TimeFormat(info.CreatedAt),
+			UpdatedAt:      helper.TimeFormat(info.UpdatedAt),
+		}
+		// 没有过期时间视为永久有效
+		if !info.Expire_Time.Valid {
+			tmp.Expire_Time = ""
+		}
+		// 检查过期时间
+		now := time.Now()
+		// 有过期时间且过期时间在当前时间之前
+		if info.Expire_Time.Valid && info.Expire_Time.Time.Before(now) {
+			tmp.Status = conf.Share_Out_Mod
+		}
+		res[i] = tmp
+	}
+	return res, nil
 }

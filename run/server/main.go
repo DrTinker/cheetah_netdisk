@@ -18,6 +18,7 @@ func init() {
 	start.InitCOS() //对象存储
 	start.InitMQ()
 	start.InitMedia() // 媒体文件处理
+	start.InitSocket()
 }
 
 func main() {
@@ -26,6 +27,7 @@ func main() {
 
 	start.RegisterRouter(r)
 
+	// 开启http
 	cfg, err := client.GetConfigClient().GetHttpConfig()
 	if err != nil {
 		panic(err)

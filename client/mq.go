@@ -10,6 +10,7 @@ type MQClient interface {
 	ReleaseChannel(s *models.TransferSetting)
 	Publish(setting *models.TransferSetting, msg []byte) error
 	Consume(setting *models.TransferSetting, queue, consumer string, callback func(msg []byte) bool) error
+	KeepAlive()
 }
 
 var (

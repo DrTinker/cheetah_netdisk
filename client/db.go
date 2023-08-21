@@ -15,6 +15,8 @@ type DBClient interface {
 	GetUserByEmail(email string) (*models.User, error)
 	// 通过uuid获取用户空间大小
 	GetUserVolume(id string) (now, total int64, err error)
+	// 更改用户信息
+	UpdateUserName(uuid, name string) error
 
 	// user_file
 	// 创建用户文件
@@ -51,22 +53,25 @@ type DBClient interface {
 	UpdateFileStoreTypeByHash(hash string, t int) error
 
 	// share
-	CreateShare(share *models.Share) error
-	CreateShareBatch(shares []*models.Share) error
+	SetShare(share *models.Share) error
 
+	GetShareListByUser(user_uuid string, cur, pageSize, mod int) ([]*models.Share, error)
 	GetShareByUuid(uuid string) (*models.Share, error)
 	GetUserFileUuidByShareUuid(uuid string) (user_file_uuid string, err error)
 
-	DeleteShareByUuid(uuid string) error
+	UpdateShareByUuid(uuid string, share *models.Share) error
 
-	UpdateClickNumByUuid(uuid string) error
+	DeleteShareByUuid(uuid string) error
+	DeleteShareByUserFileUuid(uuid string) error
 
 	// trans
 	CreateTrans(trans *models.Trans) error
 	UpdateTransState(uuid string, state int) error
 	GetTransStatusByUuid(uuid string) (state int, err error)
 	GetTransListByUser(user_uuid string, cur, pageSize, mod, status int) ([]*models.Trans, error)
+
 	DelTransByUuid(uuid string) error
+	DelTransByStatus(user_uuid string, mod, status int) error
 
 	// general
 	CopyUserFile(src_file *models.UserFile, des_parent_id int) (int, error)
