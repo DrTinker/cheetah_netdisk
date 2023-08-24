@@ -104,16 +104,16 @@ func (d DBClientImpl) UpdateUserName(uuid, name string) error {
 
 // 文件
 // 检测文件存在性,false表示不存在
-func (d *DBClientImpl) CheckFileExist(hash string) (bool, string, error) {
+func (d *DBClientImpl) CheckFileExist(hash string) (bool, *models.File, error) {
 	file := &models.File{}
-	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_Hash_DB+"=?", hash).Select(conf.File_UUID_DB).First(file).Error
+	err := d.DBConn.Table(conf.File_Pool_TB).Where(conf.File_Hash_DB+"=?", hash).First(file).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, "", nil
+			return false, nil, nil
 		}
-		return false, "", errors.Wrap(err, "[DBClientImpl] CheckFileExist Select err:")
+		return false, nil, errors.Wrap(err, "[DBClientImpl] CheckFileExist Select err:")
 	}
-	return true, file.Uuid, nil
+	return true, file, nil
 }
 
 func (d *DBClientImpl) CheckUserFileExist(user_uuid, file_uuid string) (bool, error) {

@@ -44,7 +44,7 @@ type DBClient interface {
 	UpdateUserFileName(name, ext, uuid string) error
 
 	// file_pool
-	CheckFileExist(hash string) (bool, string, error)
+	CheckFileExist(hash string) (bool, *models.File, error)
 	GetFileLink(uuid string) (link int, err error)
 	GetFileByUuid(uuid string) (file *models.File, err error)
 	GetFileKeyByUserFileUuid(uuid string) (fileKey string, err error)

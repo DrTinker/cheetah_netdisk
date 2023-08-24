@@ -228,7 +228,7 @@ func QuickUpload(param *models.UploadObjectParams) (bool, error) {
 	ext := param.Ext
 	user_file_uuid := param.User_File_Uuid
 	// 通过数据库查询文件是否存在
-	flag, file_uuid, err := client.GetDBClient().CheckFileExist(hash)
+	flag, file, err := client.GetDBClient().CheckFileExist(hash)
 	if err != nil {
 		return false, errors.Wrap(err, "[QuickUpload] get db data error: ")
 	}
@@ -238,7 +238,7 @@ func QuickUpload(param *models.UploadObjectParams) (bool, error) {
 	}
 	// 存在则触发秒传逻辑
 	// 检查是否为同一个人上传同一个文件
-	user_flag, err := client.GetDBClient().CheckUserFileExist(user_uuid, file_uuid)
+	user_flag, err := client.GetDBClient().CheckUserFileExist(user_uuid, file.Uuid)
 	if err != nil {
 		return false, errors.Wrap(err, "[QuickUpload] get db data error: ")
 	}
@@ -264,7 +264,9 @@ func QuickUpload(param *models.UploadObjectParams) (bool, error) {
 		Uuid:      user_file_uuid,
 		User_Uuid: user_uuid,
 		Parent_Id: parentId,
-		File_Uuid: file_uuid,
+		File_Uuid: file.Uuid,
+		Thumbnail: file.Thumbnail,
+		Size:      param.Size,
 		Name:      name,
 		Ext:       ext,
 		Hash:      hash,

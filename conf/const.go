@@ -3,7 +3,7 @@ package conf
 import "time"
 
 // HTTP启动项
-const App = "D:\\Program\\Projects\\netdesk_system\\merge\\conf\\app.ini"
+const App = "conf/app.ini"
 const HttpServer = "HttpServer"
 
 // TTL
@@ -25,7 +25,7 @@ const User_Level_normal = 0 // 用户等级
 const User_Level_vip = 1
 const User_Level_super = 2
 const User_Normal_Volume = 10 * 1024 * 1024 * 1024 // 普通用户10GB空间
-const User_VIP_Volume = 10 * 1024 * 1024 * 1024    // 普通用户20GB空间
+const User_VIP_Volume = 20 * 1024 * 1024 * 1024    // 普通用户20GB空间
 
 // 数据库
 // 表名
@@ -49,6 +49,7 @@ const File_Hash_DB = "hash"
 const File_Link_DB = "link"
 const File_FileKey_DB = "file_key"
 const File_Size_DB = "size"
+const File_Thumbnail_DB = "thumbnail"
 const File_Store_Type_DB = "store_type"
 const User_File_ID_DB = "id"
 const User_File_User_ID_DB = "user_uuid"

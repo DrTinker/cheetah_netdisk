@@ -27,7 +27,7 @@ func GetShareInfoHandler(c *gin.Context) {
 	info, time_out, err := service.GetShareInfo(share_uuid)
 	if err == conf.DBNotFoundError || err == conf.FileDeletedError {
 		log.Warn("GetShareInfoHandler record not found", share_uuid)
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"code": conf.RECORD_DELETED_CODE,
 			"msg":  conf.RECORD_DELETED_MSG,
 		})
