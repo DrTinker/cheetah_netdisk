@@ -46,7 +46,8 @@ func RegisterHandler(c *gin.Context) {
 
 	// 判断验证码是否有效
 	src := c.Query(conf.Code_Param_Key)
-	code, err := client.GetCacheClient().Get(conf.Code_Cache_Key)
+	key := helper.GenVerifyCodeKey(conf.Code_Cache_Key, user.Email)
+	code, err := client.GetCacheClient().Get(key)
 	if err != nil || code == "" || src != code {
 		log.Error("RegisterHandler: verify code error ", err)
 		c.JSON(http.StatusBadRequest, gin.H{

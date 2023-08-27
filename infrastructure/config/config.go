@@ -52,7 +52,7 @@ func (c *ConfigClientImpl) GetHttpConfig() (*models.HttpConfig, error) {
 		return nil, errors.New("empty http config")
 	}
 	c.Http.Address = c.source.Section("HttpServer").Key("address").MustString("127.0.0.1")
-	c.Http.Port = c.source.Section("HttpServer").Key("port").MustInt(8080)
+	c.Http.Port = c.source.Section("HttpServer").Key("port").MustInt(8081)
 	return c.Http, nil
 }
 
