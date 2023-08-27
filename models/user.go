@@ -34,3 +34,9 @@ type User struct {
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
+
+type UserInfo struct {
+	Uuid  string
+	Name  string
+	Level int // 0: 普通用户， 1：VIP用户， 2：特权用户
+}

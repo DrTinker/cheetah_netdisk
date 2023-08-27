@@ -29,15 +29,15 @@ func RegisterHandler(c *gin.Context) {
 	info, err := client.GetDBClient().GetUserByEmail(user.Email)
 	if err != nil && err != conf.DBNotFoundError {
 		log.Error("RegisterHandler err: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_REGISTER_CODE,
-			"msg":  conf.REGISTER_ERROR_MESSAGE,
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
 		})
 	}
 	// 存在则报错
 	if info != nil {
 		log.Info("RegisterHandler: repeat", info.Email)
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"code": conf.ERROR_REGISTER_CODE,
 			"msg":  conf.REGISTER_REPEAT_MESSAGE,
 		})
@@ -50,8 +50,8 @@ func RegisterHandler(c *gin.Context) {
 	code, err := client.GetCacheClient().Get(key)
 	if err != nil || code == "" || src != code {
 		log.Error("RegisterHandler: verify code error ", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_REGISTER_CODE,
+		c.JSON(http.StatusOK, gin.H{
+			"code": conf.ERROR_VERIFY_CODE,
 			"msg":  conf.VERIFY_CODE_ERROR_MESSAGE,
 		})
 		return
@@ -82,8 +82,8 @@ func RegisterHandler(c *gin.Context) {
 	if err != nil {
 		log.Error("RegisterHandler err: %+v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code": conf.ERROR_REGISTER_CODE,
-			"msg":  conf.REGISTER_ERROR_MESSAGE,
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
 		})
 		return
 	}

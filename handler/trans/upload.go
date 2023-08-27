@@ -1,11 +1,13 @@
-package object
+package trans
 
 import (
 	"NetDesk/conf"
 	"NetDesk/helper"
 	"NetDesk/models"
 	"NetDesk/service"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -60,7 +62,15 @@ func UploadHandler(c *gin.Context) {
 		})
 		return
 	}
-
+	remotePath := c.PostForm(conf.File_Remote_Path_Key)
+	if remotePath == "" {
+		log.Error("UploadHandler empty remote path")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
 	// 获取用户ID
 	var user_uuid string
 	if idstr, f := c.Get(conf.User_ID); f {
@@ -77,11 +87,14 @@ func UploadHandler(c *gin.Context) {
 	// 生成ID
 	file_uuid := helper.GenFid(fileKey)
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
+	uploadID := helper.GenUploadID(user_uuid, hash)
 	// 打包参数
 	param := &models.UploadObjectParams{
+		UploadID:       uploadID,
 		FileKey:        fileKey,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,
+		RemotePath:     remotePath,
 		Hash:           hash,
 		Size:           len(file),
 		Name:           name,
@@ -95,14 +108,14 @@ func UploadHandler(c *gin.Context) {
 		log.Error("UploadHandler quick upload err: ", err)
 		// 同一个人上传同一个文件，返回错误前端走复制文件接口
 		if err == conf.FileExistError {
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"code": conf.FILE_EXIST_CODE,
 				"msg":  conf.FILE_EXIST_MESSAGE,
 			})
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileName),
 		})
 		return
@@ -111,9 +124,9 @@ func UploadHandler(c *gin.Context) {
 		// 秒传直接返回
 		log.Info("UploadHandler success: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.SUCCESS_RESP_MESSAGE,
-			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-			"file_id": user_file_uuid,
+			"code":      conf.QUICK_UPLOAD_CODE,
+			"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+			"upload_id": uploadID,
 		})
 		return
 	}
@@ -130,9 +143,9 @@ func UploadHandler(c *gin.Context) {
 
 	log.Info("UploadHandler success: ", user_file_uuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":    conf.SUCCESS_RESP_MESSAGE,
-		"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-		"file_id": user_file_uuid,
+		"code":      conf.HTTP_SUCCESS_CODE,
+		"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+		"upload_id": uploadID,
 	})
 }
 
@@ -140,11 +153,13 @@ func UploadHandler(c *gin.Context) {
 //		  size: 文件大小
 //		  parent_uuid: 父级文件夹的user_file_uuid
 // 		  name: 文件全称 eg: aaa.txt
+//		  local_path: 文件用户本地存储路径
 // return: uploadID: 本次分块上传唯一标识
 //		   chunk_size: 分块大小
 // 		   chunk_count: 分块数量
 // 		   chunk_list: 已经上传的分块列表
-func InitUploadPartHandler(c *gin.Context) {
+// user_file_uuid & file_uuid在这里生成
+func InitUploadHandler(c *gin.Context) {
 	// 获取文件大小
 	fileSize := c.PostForm(conf.File_Size_Key)
 	size, err := strconv.Atoi(fileSize)
@@ -162,39 +177,61 @@ func InitUploadPartHandler(c *gin.Context) {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {
-		log.Error("InitUploadPartHandler uuid empty")
+		log.Error("InitUploadHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
 		return
 	}
-	// 检查有效性性的中间件已经读取过了，因此从ctx中获取
+	// 获取文件哈希值
 	hash := c.PostForm(conf.File_Hash_Key)
-	if err != nil {
-		log.Error("InitUploadPartHandler invaild file hash")
+	if hash == "" {
+		log.Error("InitUploadHandler invaild file hash")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
 		return
 	}
-	// 文件夹名称
+	// 文件名称
 	fileName := c.PostForm(conf.File_Name_Key)
 	name, ext, err := helper.SplitFileFullName(fileName)
 	if err != nil {
-		log.Error("InitUploadPartHandler invaild file name")
+		log.Error("InitUploadHandler invaild file name")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
 		return
 	}
+	// 用户本地存储路径
+	localPath := c.PostForm(conf.File_Local_Path_Key)
+	if localPath == "" {
+		log.Error("InitUploadHandler invaild local path")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// 云存储路径
+	remotePath := c.PostForm(conf.File_Remote_Path_Key)
+	if remotePath == "" {
+		log.Error("InitUploadHandler empty remote path")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		return
+	}
+	// uploadID用于断点续传
+	uploadID := c.PostForm(conf.File_Upload_ID_Key)
 	fileKey := helper.GenFileKey(hash, ext)
-	// 前端传入uuid后端查询id
+	// 上传目录uuid
 	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
 	if fileKey == "" || user_file_uuid_parent == "" {
-		log.Error("InitUploadPartHandler empty file key")
+		log.Error("InitUploadHandler empty file key")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -206,7 +243,10 @@ func InitUploadPartHandler(c *gin.Context) {
 	user_file_uuid := helper.GenUserFid(user_uuid, fileKey)
 	// 打包参数
 	param := &models.UploadObjectParams{
+		UploadID:       uploadID,
 		FileKey:        fileKey,
+		LocalPath:      localPath,
+		RemotePath:     remotePath,
 		User_Uuid:      user_uuid,
 		Parent:         user_file_uuid_parent,
 		Hash:           hash,
@@ -216,45 +256,37 @@ func InitUploadPartHandler(c *gin.Context) {
 		File_Uuid:      file_uuid,
 		User_File_Uuid: user_file_uuid,
 	}
-	// 查看是否秒传
-	flag, err := service.QuickUpload(param)
+
+	// 调用service层
+	info, err := service.InitUpload(param)
 	if err != nil {
-		log.Error("InitUploadPartHandler quick upload err: ", err)
+		log.Error("InitUploadHandler quick upload err: ", err)
+		// 同一个人上传同一个文件，返回错误前端走复制文件接口
 		if err == conf.FileExistError {
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"code": conf.FILE_EXIST_CODE,
 				"msg":  conf.FILE_EXIST_MESSAGE,
 			})
 			return
 		}
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
-			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, fileName),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": conf.SERVER_ERROR_CODE,
+			"msg":  conf.SERVER_ERROR_MSG,
 		})
 		return
 	}
-	if flag {
+	if info.Quick {
 		// 秒传直接返回
-		log.Info("InitUploadPartHandler success, file exist: ", user_file_uuid)
+		log.Info("InitUploadHandler success, file exist: ", user_file_uuid)
 		c.JSON(http.StatusOK, gin.H{
-			"code":    conf.SUCCESS_RESP_MESSAGE,
-			"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
-			"file_id": user_file_uuid,
-		})
-		return
-	}
-	// 调用service层
-	info, err := service.InitUploadPart(param)
-	if err != nil {
-		log.Error("InitUploadPartHandler invaild file size")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_PART_INIT_CODE,
-			"msg":  conf.UPLOAD_PART_INIT_FAIL_MESSAGE,
+			"code":      conf.QUICK_UPLOAD_CODE,
+			"msg":       fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+			"upload_id": info.UploadID,
 		})
 		return
 	}
 	// 成功
-	log.Info("InitUploadPartHandler success: ", info.UploadID)
+	log.Info("InitUploadHandler success: ", info.UploadID)
 	c.JSON(http.StatusOK, gin.H{
 		"code":        conf.HTTP_SUCCESS_CODE,
 		"msg":         conf.SUCCESS_RESP_MESSAGE,
@@ -265,15 +297,15 @@ func InitUploadPartHandler(c *gin.Context) {
 	})
 }
 
-// param: file: 文件
+// param: files: 文件
 //		  upload_id: 文件分块上传唯一ID
 //		  chunk_num: 分块编号
 // return: chunk_num: 分块编号
 //		   upload_id: 文件分块上传唯一ID
 func UploadPartHandler(c *gin.Context) {
 	// 检查文件有效性时已经读取过文件，从ctx中获取文件
-	v, exist := c.Get(conf.File_Form_Key)
-	if !exist {
+	file, err := c.FormFile(conf.File_Form_Key)
+	if err != nil {
 		log.Error("UploadPartHandler err: file data invaild")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -281,13 +313,24 @@ func UploadPartHandler(c *gin.Context) {
 		})
 		return
 	}
-	file, ok := v.([]byte)
-	if !ok {
-		log.Error("UploadPartHandler err: file data invaild")
+	fd, err := file.Open()
+	if err != nil {
+		log.Error("UploadPartHandler file open err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
+		c.Abort()
+		return
+	}
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		log.Error("FileCheck file open err: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": conf.HTTP_INVALID_PARAMS_CODE,
+			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
+		})
+		c.Abort()
 		return
 	}
 	// 获取chunknum
@@ -312,7 +355,7 @@ func UploadPartHandler(c *gin.Context) {
 		return
 	}
 	// 调用service
-	err = service.UploadPart(uploadID, num, file)
+	err = service.UploadPart(uploadID, num, data)
 	if err != nil {
 		log.Error("UploadPartHandler service error: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -348,9 +391,16 @@ func CompleteUploadPartHandler(c *gin.Context) {
 	param, path, err := service.CompleteUploadPart(uploadID)
 	if err != nil {
 		log.Error("CompleteUploadPartHandler service error: ", err)
+		if err == conf.InvaildFileHashError {
+			c.JSON(http.StatusOK, gin.H{
+				"code": conf.ERROR_FILE_HASH_CODE,
+				"msg":  err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.ERROR_UPLOAD_CODE,
-			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, param.Name+"."+param.Ext),
+			"msg":  err.Error(),
 		})
 		return
 	}
@@ -358,8 +408,15 @@ func CompleteUploadPartHandler(c *gin.Context) {
 	err = service.UploadFileByPath(param, path)
 	if err != nil {
 		log.Error("CompleteUploadPartHandler service error: ", err)
+		if errors.Is(err, conf.ChunkMissError) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code": conf.CHUNK_MISS_CODE,
+				"msg":  conf.SERVER_ERROR_MSG,
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
-			"code": conf.ERROR_UPLOAD_CODE,
+			"code": conf.SERVER_ERROR_CODE,
 			"msg":  fmt.Sprintf(conf.UPLOAD_FAIL_MESSAGE, param.Name+"."+param.Ext),
 		})
 		return

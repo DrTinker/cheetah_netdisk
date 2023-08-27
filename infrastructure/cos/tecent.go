@@ -135,7 +135,7 @@ func (c *COSClientImpl) Delete(key string) error {
 func (c *COSClientImpl) GetPresignedUrl(fileKey string, expire time.Duration) (url string, err error) {
 	secretID := c.COSClient.GetCredential().SecretID
 	secretKey := c.COSClient.GetCredential().SecretKey
-	presignedURL, err := c.COSClient.Object.GetPresignedURL(context.Background(), http.MethodPut, fileKey, secretID, secretKey, expire, nil)
+	presignedURL, err := c.COSClient.Object.GetPresignedURL(context.Background(), http.MethodGet, fileKey, secretID, secretKey, expire, nil)
 	if err != nil {
 		return "", errors.Wrap(err, "[COSClientImpl] GetPresignedUrl error: ")
 	}

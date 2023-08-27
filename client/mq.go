@@ -7,8 +7,10 @@ import (
 
 type MQClient interface {
 	InitTransfer(exchange, key string) (*models.TransferSetting, error)
+	ReleaseChannel(s *models.TransferSetting)
 	Publish(setting *models.TransferSetting, msg []byte) error
 	Consume(setting *models.TransferSetting, queue, consumer string, callback func(msg []byte) bool) error
+	KeepAlive()
 }
 
 var (

@@ -67,7 +67,7 @@ func FileCheck() gin.HandlerFunc {
 		// gin获取文件
 		file, err := c.FormFile(conf.File_Form_Key)
 		if err != nil {
-			log.Error("UploadHandler err: ", err)
+			log.Error("FileCheck err: ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.HTTP_INVALID_PARAMS_CODE,
 				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -78,7 +78,7 @@ func FileCheck() gin.HandlerFunc {
 		// 读取文件
 		fd, err := file.Open()
 		if err != nil {
-			log.Error("UploadHandler file open err: ", err)
+			log.Error("FileCheck file open err: ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.HTTP_INVALID_PARAMS_CODE,
 				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -88,7 +88,7 @@ func FileCheck() gin.HandlerFunc {
 		}
 		data, err := ioutil.ReadAll(fd)
 		if err != nil {
-			log.Error("UploadHandler file open err: ", err)
+			log.Error("FileCheck file open err: ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.HTTP_INVALID_PARAMS_CODE,
 				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -99,6 +99,7 @@ func FileCheck() gin.HandlerFunc {
 		// 获取前端传入文件md5值
 		md5 := c.PostForm(conf.File_Hash_Key)
 		if md5 == "" {
+			log.Error("FileCheck file md5 value invaild")
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.ERROR_FILE_HASH_CODE,
 				"msg":  conf.FILE_HASH_INVAILD_MESSAGE,

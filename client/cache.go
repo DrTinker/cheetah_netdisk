@@ -14,7 +14,7 @@ type CacheClient interface {
 	Set(key string, val interface{}) error
 	SetNX(key string, val interface{}, expire time.Duration) (bool, error)
 	SetWithExpire(key string, val interface{}, expire time.Duration) error
-	DelBatch(keys string) (num int64, err error)
+	DelBatch(keys ...string) (num int64, err error)
 	// hset
 	HSet(key, filed string, val interface{}) error
 	HMSet(key string, fileds map[string]interface{}) error
