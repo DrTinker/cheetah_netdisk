@@ -12,7 +12,7 @@ import (
 
 func UpdateUserNameHandler(c *gin.Context) {
 	// 获取username
-	userName := c.PostForm(conf.User_Name_Key)
+	userName := c.PostForm(conf.UserName)
 	if userName == "" {
 		log.Error("UpdateUserNameHandler user name empty")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -23,7 +23,7 @@ func UpdateUserNameHandler(c *gin.Context) {
 	}
 	// 检测登录态
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {

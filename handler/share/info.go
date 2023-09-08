@@ -63,7 +63,7 @@ func GetShareInfoHandler(c *gin.Context) {
 func GetShareListHandler(c *gin.Context) {
 	// 获取用户ID
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {

@@ -89,7 +89,7 @@ func (d *DBClientImpl) GetUserVolume(id string) (now, total int64, err error) {
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "[DBClientImpl] GetUserVolume Select err:")
 	}
-	return user.Now_Volume, user.Total_Volume, nil
+	return user.NowVolume, user.TotalVolume, nil
 }
 
 // 更改用户名
@@ -139,8 +139,8 @@ func (d *DBClientImpl) CreateUploadRecord(file *models.File, userFile *models.Us
 		if err != nil {
 			return errors.Wrap(err, "[DBClientImpl] GetUserVolume Select err:")
 		}
-		cur := user.Now_Volume + int64(file.Size)
-		if user.Total_Volume < cur+int64(file.Size) {
+		cur := user.NowVolume + int64(file.Size)
+		if user.TotalVolume < cur+int64(file.Size) {
 			return conf.VolumeError
 		}
 		// user_file表增加记录

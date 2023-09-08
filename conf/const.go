@@ -3,7 +3,7 @@ package conf
 import "time"
 
 // HTTP启动项
-const App = "conf/app.ini"
+const App = "../../conf/app copy.ini"
 const HttpServer = "HttpServer"
 
 // TTL
@@ -17,15 +17,16 @@ const JWTClaims = "jwt_claims"    // 存储jwt的声明字段
 const JWTHeader = "Authorization" // jwt请求头标识字段
 
 // user
-const User_ID = "user_id"
-const User_PWD = "user_pwd"
-const User_Email = "user_email"
-const User_Phone = "user_phone"
-const User_Level_normal = 0 // 用户等级
-const User_Level_vip = 1
-const User_Level_super = 2
-const User_Normal_Volume = 10 * 1024 * 1024 * 1024 // 普通用户10GB空间
-const User_VIP_Volume = 20 * 1024 * 1024 * 1024    // 普通用户20GB空间
+const UserID = "userID"
+const UserPWD = "userPwd"
+const UserEmail = "userEmail"
+const UserPhone = "userPhone"
+const UserName = "userName"
+const UserLevelNormal = 0 // 用户等级
+const UserLevelVip = 1
+const UserLevelSuper = 2
+const UserNormalVolume = 10 * 1024 * 1024 * 1024 // 普通用户10GB空间
+const UserVIPVolume = 20 * 1024 * 1024 * 1024    // 普通用户20GB空间
 
 // 数据库
 // 表名

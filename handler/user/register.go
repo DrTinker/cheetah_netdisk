@@ -60,14 +60,14 @@ func RegisterHandler(c *gin.Context) {
 	id := helper.GenUid(user.Name, user.Email)
 
 	user.Uuid = id
-	user.Level = conf.User_Level_normal
-	user.Now_Volume = 0
-	user.Total_Volume = conf.User_Normal_Volume // 单位B
+	user.Level = conf.UserLevelNormal
+	user.NowVolume = 0
+	user.TotalVolume = conf.UserNormalVolume // 单位B
 
 	// 生成用户空间根目录uuid
 	folderName := fmt.Sprintf("%s-%s", user.Name, user.Uuid)
 	user_file_uuid := helper.GenUserFid(user.Uuid, folderName)
-	user.Start_Uuid = user_file_uuid
+	user.StartUuid = user_file_uuid
 	// 生成user_file结构体
 	user_file := &models.UserFile{
 		Uuid:      user_file_uuid,

@@ -60,7 +60,7 @@ func DownloadFileHandler(c *gin.Context) {
 
 	// 获取用户ID
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {
@@ -138,7 +138,7 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 	}
 	// 获取用户ID
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {
@@ -253,7 +253,7 @@ func InitDownloadHandler(c *gin.Context) {
 	}
 	// 获取用户ID
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {

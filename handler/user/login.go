@@ -17,10 +17,10 @@ func LoginHandler(c *gin.Context) {
 	var token string
 	// 处理jwt token
 	if c.GetBool(conf.JWTFlag) {
-		if email, ok := c.Get(conf.User_Email); ok && email != nil {
+		if email, ok := c.Get(conf.UserEmail); ok && email != nil {
 			u.Email, _ = email.(string)
 		}
-		if pwd, ok := c.Get(conf.User_PWD); ok && pwd != nil {
+		if pwd, ok := c.Get(conf.UserPWD); ok && pwd != nil {
 			u.Password, _ = pwd.(string)
 		}
 	} else {
@@ -74,7 +74,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 返回成功
-	log.Info("LoginHandler success: %v", u.User_UUID)
+	log.Info("LoginHandler success: %v", u.UserUUID)
 	// 返回值去掉密码字段
 	info.Password = ""
 	c.JSON(http.StatusOK, gin.H{

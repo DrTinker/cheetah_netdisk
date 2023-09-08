@@ -15,7 +15,7 @@ import (
 // 返回用户非敏感信息，用于查询分享者信息，需要传入参数，只返回非敏感信息
 func UserProfileHandler(c *gin.Context) {
 	// 获取用户uuid
-	user_uuid := c.Query(conf.User_ID)
+	user_uuid := c.Query(conf.UserID)
 	if user_uuid == "" {
 		log.Error("UserProfileHandler user uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -51,7 +51,7 @@ func UserProfileHandler(c *gin.Context) {
 func UserInfoHandler(c *gin.Context) {
 	// 获取用户uuid
 	var user_uuid string
-	if idstr, f := c.Get(conf.User_ID); f {
+	if idstr, f := c.Get(conf.UserID); f {
 		user_uuid = helper.Strval(idstr)
 	}
 	if user_uuid == "" {

@@ -24,7 +24,7 @@ func EmailVerifyHandler(c *gin.Context) {
 		})
 	}
 	// 获取参数
-	to := c.Query(conf.User_Email)
+	to := c.Query(conf.UserEmail)
 	// 生成验证码
 	code := helper.GenRandCode()
 	// 生成rediskey
@@ -70,7 +70,7 @@ func ForgetPwdHandler(c *gin.Context) {
 		})
 	}
 	// 获取邮箱 & 手机号
-	email := c.Query(conf.User_Email)
+	email := c.Query(conf.UserEmail)
 	if email == "" {
 		log.Error("ForgetPwdHandler err: %+v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -78,7 +78,7 @@ func ForgetPwdHandler(c *gin.Context) {
 			"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
 		})
 	}
-	phone := c.Query(conf.User_Phone)
+	phone := c.Query(conf.UserPhone)
 	// 查询数据库
 	user, err := client.GetDBClient().GetUserByEmail(email)
 	if err != nil {

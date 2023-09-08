@@ -8,8 +8,6 @@ const Forget_Password_Page = "<h2>您的密码为：</h2><br><h1>%s</h1>"
 const Page_Num_Key = "page"
 const File_Ext_Key = "ext"
 
-const User_Name_Key = "name"
-
 // 文件上传相关
 const File_Form_Key = "files"
 const File_Hash_Key = "hash"
