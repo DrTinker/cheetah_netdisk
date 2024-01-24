@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"NetDesk/conf"
+	"NetDisk/conf"
 	"fmt"
 	"net/http"
 	"sync"
@@ -22,9 +22,9 @@ type SocketClientImpl struct {
 func NewSocketClientImpl() *SocketClientImpl {
 	// websocket Upgrader
 	wsupgrader := websocket.Upgrader{
-		ReadBufferSize:   conf.Buffer_Size,
-		WriteBufferSize:  conf.Buffer_Size,
-		HandshakeTimeout: conf.Handshake_Timeout,
+		ReadBufferSize:   conf.BufferSize,
+		WriteBufferSize:  conf.BufferSize,
+		HandshakeTimeout: conf.HandshakeTimeout,
 		// 取消ws跨域校验
 		CheckOrigin: func(r *http.Request) bool {
 			return true

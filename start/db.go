@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/infrastructure/db"
+	"NetDisk/client"
+	"NetDisk/infrastructure/db"
 )
 
 func InitDB() {

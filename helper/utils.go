@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"NetDesk/conf"
+	"NetDisk/conf"
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
@@ -15,7 +15,7 @@ func GenRandCode() string {
 	s := "1234567890QWERTYUIOPASDFGHJKLZXCVBNM"
 	code := ""
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < conf.Code_Len; i++ {
+	for i := 0; i < conf.CodeLen; i++ {
 		flag := rand.Intn(len(s))
 		code += string(s[flag])
 	}
@@ -76,7 +76,7 @@ func SplitFileFullName(fullName string) (name string, ext string, err error) {
 	// TODO 文件夹判断不准确 com.example.aaa也可是文件夹名称，需要前端传入ext
 	// 是文件夹则增加默认文件夹扩展名
 	if !strings.Contains(fullName, ".") {
-		fullName = fullName + "." + conf.Folder_Default_EXT
+		fullName = fullName + "." + conf.FolderDefaultExt
 	}
 	if len(fullName) == 0 {
 		return "", "", conf.FilePathError
@@ -107,4 +107,13 @@ func CountMD5(path string, data []byte, mod int) string {
 	} else {
 		return fmt.Sprintf("%x", md5.Sum(data))
 	}
+}
+
+// 计算num是多少位十进制数
+func CountDigit(num int) int {
+	res := 0
+	for i := num; i > 0; i /= 10 {
+		res++
+	}
+	return res
 }

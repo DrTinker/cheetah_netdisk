@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
+	"NetDisk/client"
+	"NetDisk/conf"
 )
 
 func InitJWT() {

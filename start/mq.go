@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/infrastructure/mq"
+	"NetDisk/client"
+	"NetDisk/infrastructure/mq"
 	"fmt"
 )
 

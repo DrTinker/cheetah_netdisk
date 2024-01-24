@@ -1,8 +1,8 @@
 package main
 
 import (
-	"NetDesk/handler/trans"
-	"NetDesk/start"
+	"NetDisk/handler/trans"
+	"NetDisk/start"
 	"fmt"
 )
 
@@ -12,6 +12,7 @@ func init() {
 	start.InitDB()     // 数据库
 	start.InitCache()  // 缓存
 	start.InitCOS()    //对象存储
+	start.InitLOS()
 	start.InitMQ()
 }
 

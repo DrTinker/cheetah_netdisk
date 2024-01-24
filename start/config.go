@@ -1,9 +1,9 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/infrastructure/config"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/infrastructure/config"
 )
 
 // 加载启动项

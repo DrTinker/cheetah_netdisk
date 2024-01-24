@@ -13,19 +13,19 @@ type MultiFileUploadOptions struct {
 
 // service层UploadFile参数
 type UploadObjectParams struct {
-	// fileKey hash size file_uuid user_file_uuid Parent_Id User_Uuid
-	UploadID       string
-	FileKey        string
-	LocalPath      string // 用户本地存储路径
-	RemotePath     string // 云空间存储路径
-	Hash           string
-	Size           int
-	Parent         string
-	User_Uuid      string
-	Name           string
-	Ext            string
-	File_Uuid      string // 可选
-	User_File_Uuid string // 可选
+	// fileKey hash size FileUuid UserFileUuid ParentId UserUuid
+	UploadID     string
+	FileKey      string
+	LocalPath    string // 用户本地存储路径
+	RemotePath   string // 云空间存储路径
+	Hash         string
+	Size         int
+	Parent       string
+	UserUuid     string
+	Name         string
+	Ext          string
+	FileUuid     string // 可选
+	UserFileUuid string // 可选
 }
 
 // 初始化分片上传返回值
@@ -47,23 +47,23 @@ type InitDownloadResult struct {
 
 // 分片下载
 type DownloadObjectParam struct {
-	Req            http.Request
-	Resp           http.ResponseWriter
-	DownloadID     string
-	User_File_Uuid string
-	User_Uuid      string
-	Parent_Uuid    string // 文件所在目录uuid
-	LocalPath      string // 用户本地存储路径
-	RemotePath     string // 云存储路径
-	Continue       bool   // 是否续传
+	Req          http.Request
+	Resp         http.ResponseWriter
+	DownloadID   string
+	UserFileUuid string
+	UserUuid     string
+	ParentUuid   string // 文件所在目录uuid
+	LocalPath    string // 用户本地存储路径
+	RemotePath   string // 云存储路径
+	Continue     bool   // 是否续传
 }
 
 // 创建分享链接参数
 type CreateShareParams struct {
-	Share_Uuid     string
-	User_Uuid      string
-	User_File_Uuid string
-	Code           string
-	Fullname       string
-	Expire         sql.NullTime
+	ShareUuid    string
+	UserUuid     string
+	UserFileUuid string
+	Code         string
+	Fullname     string
+	Expire       sql.NullTime
 }

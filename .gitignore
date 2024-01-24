@@ -2,5 +2,8 @@
 *_test.go
 *.txt
 *.md
+*.sh
+.vscode/
 Local storage/
 deploy/
+.vscode/launch.json

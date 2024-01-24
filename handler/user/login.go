@@ -1,9 +1,9 @@
 package user
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/models"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -47,7 +47,7 @@ func LoginHandler(c *gin.Context) {
 
 	info, err := client.GetDBClient().GetUserByEmail(email)
 	if err != nil && err != conf.DBNotFoundError {
-		log.Error("LoginHandler pwd err: %+v", err)
+		log.Error("LoginHandler pwd err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -55,7 +55,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 	if err == conf.DBNotFoundError || info.Password != pwd {
-		log.Error("LoginHandler pwd err: %+v", err)
+		log.Error("LoginHandler pwd err: ", err)
 		c.JSON(http.StatusOK, gin.H{
 			"code": conf.ERROR_LOGIN_CODE,
 			"msg":  conf.LOGIN_ERROR_MESSAGE,
@@ -74,7 +74,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 返回成功
-	log.Info("LoginHandler success: %v", u.UserUUID)
+	log.Info("LoginHandler success: ", u.UserUUID)
 	// 返回值去掉密码字段
 	info.Password = ""
 	c.JSON(http.StatusOK, gin.H{

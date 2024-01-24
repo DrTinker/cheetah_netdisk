@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"net/http"
 	"strconv"
 
@@ -15,10 +15,10 @@ import (
 // 通过文件夹uuid获取该文件下全部文件信息
 func GetFileListHandler(c *gin.Context) {
 	// 获取传入文件夹uuid
-	folder_uuid := c.Query(conf.Folder_Uuid_Key)
+	folder_uuid := c.Query(conf.FileParentKey)
 	// 获取页号
-	pageNumStr := c.Query(conf.Page_Num_Key)
-	PageNum, err := strconv.Atoi(pageNumStr)
+	pageNumStr := c.Query(conf.PageNumKey)
+	pageNum, err := strconv.Atoi(pageNumStr)
 	if err != nil {
 		log.Error("GetFileListHandler get page err: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -27,7 +27,7 @@ func GetFileListHandler(c *gin.Context) {
 		})
 		return
 	}
-	ext := c.Query(conf.File_Ext_Key)
+	ext := c.Query(conf.FileExtKey)
 	// 查询数据库
 	// 通过uuid获取ID
 	uuids := make([]string, 1)
@@ -43,7 +43,7 @@ func GetFileListHandler(c *gin.Context) {
 	}
 	id := ids[folder_uuid]
 	// 查询数据库获取列表
-	files, err := client.GetDBClient().GetUserFileListPage(id, PageNum, conf.Default_Page_Size, ext)
+	files, err := client.GetDBClient().GetUserFileListPage(id, pageNum, conf.DefaultPageSize, ext)
 	if err != nil || files == nil {
 		log.Error("GetFileListHandler err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -65,13 +65,16 @@ func GetFileListHandler(c *gin.Context) {
 	}
 	// 生成结构体
 	for i, file := range files {
+		// 缩略图公开读写
+		// TODO 目前没啥好办法从LOS读取缩略图，数据库设计缺陷，要改的话得改数据表，现有数据迁移有点费事
+		// TODO 临时解决方案：transfer先传缩略图，缩略图很小，用户基本对延迟无感知
 		tn := ""
 		if file.Thumbnail != "" {
 			tn = cfg.Domain + "/" + file.Thumbnail
 		}
 		show[i] = &models.UserFileShow{}
 		show[i].Uuid = file.Uuid
-		show[i].User_Uuid = file.User_Uuid
+		show[i].UserUuid = file.UserUuid
 		show[i].Name = file.Name
 		show[i].Ext = file.Ext
 		show[i].Thumbnail = tn
@@ -83,16 +86,16 @@ func GetFileListHandler(c *gin.Context) {
 	// 返回数据
 	log.Info("GetFileListHandler success: ", len(show))
 	c.JSON(http.StatusOK, gin.H{
-		"code":      conf.HTTP_SUCCESS_CODE,
-		"msg":       conf.LIST_FILES_SUCCESS_MESSAGE,
-		"file_list": show,
+		"code":     conf.HTTP_SUCCESS_CODE,
+		"msg":      conf.LIST_FILES_SUCCESS_MESSAGE,
+		"fileList": show,
 	})
 }
 
 func GetFileInfoHandler(c *gin.Context) {
 	// 获取路径
-	user_file_uuid := c.Query(conf.File_Uuid_Key)
-	if user_file_uuid == "" {
+	UserFileUuid := c.Query(conf.FileUuidKey)
+	if UserFileUuid == "" {
 		log.Error("GetFileInfoHandler err: invaild id")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -101,7 +104,7 @@ func GetFileInfoHandler(c *gin.Context) {
 		return
 	}
 	// 获取文件数据
-	file, err := client.GetDBClient().GetUserFileByUuid(user_file_uuid)
+	file, err := client.GetDBClient().GetUserFileByUuid(UserFileUuid)
 	if err != nil {
 		log.Error("GetFileInfoHandler: get user file error ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -125,7 +128,7 @@ func GetFileInfoHandler(c *gin.Context) {
 	}
 	show := &models.UserFileShow{}
 	show.Uuid = file.Uuid
-	show.User_Uuid = file.User_Uuid
+	show.UserUuid = file.UserUuid
 	show.Name = file.Name
 	show.Ext = file.Ext
 	show.Thumbnail = tn
@@ -134,7 +137,7 @@ func GetFileInfoHandler(c *gin.Context) {
 	show.CreatedAt = helper.TimeFormat(file.CreatedAt)
 	show.UpdatedAt = helper.TimeFormat(file.UpdatedAt)
 	// 成功
-	log.Info("GetFileInfoHandler: get user file success: ", user_file_uuid)
+	log.Info("GetFileInfoHandler: get user file success: ", UserFileUuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,

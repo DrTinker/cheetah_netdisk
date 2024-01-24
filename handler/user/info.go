@@ -1,10 +1,10 @@
 package user
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -15,8 +15,8 @@ import (
 // 返回用户非敏感信息，用于查询分享者信息，需要传入参数，只返回非敏感信息
 func UserProfileHandler(c *gin.Context) {
 	// 获取用户uuid
-	user_uuid := c.Query(conf.UserID)
-	if user_uuid == "" {
+	UserUuid := c.Query(conf.UserID)
+	if UserUuid == "" {
 		log.Error("UserProfileHandler user uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -24,9 +24,9 @@ func UserProfileHandler(c *gin.Context) {
 		})
 		return
 	}
-	info, err := client.GetDBClient().GetUserByID(user_uuid)
+	info, err := client.GetDBClient().GetUserByID(UserUuid)
 	if err != nil && err != conf.DBNotFoundError {
-		log.Error("LoginHandler pwd err: %+v", err)
+		log.Error("LoginHandler pwd err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -34,12 +34,12 @@ func UserProfileHandler(c *gin.Context) {
 		return
 	}
 	res := models.UserInfo{
-		Uuid:  user_uuid,
+		Uuid:  UserUuid,
 		Name:  info.Name,
 		Level: info.Level,
 	}
 	// 返回成功
-	log.Info("UserInfoHandler success: %v", user_uuid)
+	log.Info("UserInfoHandler success: ", UserUuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,
@@ -50,11 +50,11 @@ func UserProfileHandler(c *gin.Context) {
 // 查询用户自己的信息，返回全部数据,无需传入参数
 func UserInfoHandler(c *gin.Context) {
 	// 获取用户uuid
-	var user_uuid string
+	var UserUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		UserUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if UserUuid == "" {
 		log.Error("UserInfoHandler user uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -63,9 +63,9 @@ func UserInfoHandler(c *gin.Context) {
 		return
 	}
 	// 获取空间大小
-	info, err := client.GetDBClient().GetUserByID(user_uuid)
+	info, err := client.GetDBClient().GetUserByID(UserUuid)
 	if err != nil && err != conf.DBNotFoundError {
-		log.Error("UserInfoHandler pwd err: %+v", err)
+		log.Error("UserInfoHandler pwd err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -73,7 +73,7 @@ func UserInfoHandler(c *gin.Context) {
 		return
 	}
 	// 返回成功
-	log.Info("UserInfoHandler success: %v", user_uuid)
+	log.Info("UserInfoHandler success: ", UserUuid)
 	// 返回值去掉密码字段
 	info.Password = ""
 	c.JSON(http.StatusOK, gin.H{

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -13,24 +13,24 @@ import (
 func InitDownloadCOS(param *models.DownloadObjectParam) (*models.InitDownloadResult, error) {
 	// 接收参数
 	downloadID := param.DownloadID
-	user_file_uuid := param.User_File_Uuid
+	UserFileUuid := param.UserFileUuid
 	// 查询file信息
-	user_file, err := client.GetDBClient().GetUserFileByUuid(user_file_uuid)
+	user_file, err := client.GetDBClient().GetUserFileByUuid(UserFileUuid)
 	if err != nil {
 		return nil, err
 	}
 	// 检查下载文件的人是否是文件持有者
-	if user_file.User_Uuid != param.User_Uuid {
+	if user_file.UserUuid != param.UserUuid {
 		return nil, conf.InvaildOwnerError
 	}
 	// 通过uuid查询文件信息
-	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(user_file_uuid)
+	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(UserFileUuid)
 	if err != nil {
 		return nil, err
 	}
 	size := user_file.Size
 	// 获取预签名
-	url, err := client.GetCOSClient().GetPresignedUrl(fileKey, conf.Default_Sign_Expire)
+	url, err := client.GetCOSClient().GetPresignedUrl(fileKey, conf.DefaultSignExpire)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func InitDownloadCOS(param *models.DownloadObjectParam) (*models.InitDownloadRes
 	// redis key
 	infoKey := helper.GenDownloadPartInfoKey(downloadID)
 	// 分片数量
-	count := size/conf.File_Part_Size_Max + 1
+	count := size/conf.FilePartSizeMax + 1
 	// 分片列表
 	var chunkList []int
 
@@ -62,7 +62,7 @@ func InitDownloadCOS(param *models.DownloadObjectParam) (*models.InitDownloadRes
 			}
 			res.ChunkCount = count
 			res.ChunkList = chunkList
-			res.DownloadID = tmpInfo[conf.Download_Part_Info_Key]
+			res.DownloadID = tmpInfo[conf.DownloadPartInfoKey]
 			res.Hash = user_file.Hash
 			res.Url = url
 			return res, nil
@@ -71,10 +71,10 @@ func InitDownloadCOS(param *models.DownloadObjectParam) (*models.InitDownloadRes
 	// 首次下载，先将COS文件下载到服务器
 	// 生成分块下载信息
 	info := map[string]interface{}{
-		conf.Download_Part_Info_Key:        downloadID,
-		conf.Download_Part_Info_CSize_Key:  conf.File_Part_Size_Max,
-		conf.Download_Part_Info_CCount_Key: count,
-		conf.Download_Part_File_Size_Key:   size,
+		conf.DownloadPartInfoKey:       downloadID,
+		conf.DownloadPartInfoCSizeKey:  conf.FilePartSizeMax,
+		conf.DownloadPartInfoCCountKey: count,
+		conf.DownloadPartFileSizeKey:   size,
 	}
 	// 写redis
 	err = client.GetCacheClient().HMSet(infoKey, info)
@@ -93,18 +93,18 @@ func InitDownloadCOS(param *models.DownloadObjectParam) (*models.InitDownloadRes
 	// 调用此接口时，不论之前是nil还是fail都应更改状态为process
 	// 创建trans记录
 	trans := &models.Trans{
-		Uuid:           downloadID,
-		User_Uuid:      param.User_Uuid,
-		User_File_Uuid: param.User_File_Uuid,
-		Parent_Uuid:    param.Parent_Uuid,
-		File_Key:       fileKey,
-		Hash:           user_file.Hash,
-		Local_Path:     param.LocalPath,
-		Size:           user_file.Size,
-		Name:           user_file.Name,
-		Ext:            user_file.Ext,
-		Status:         conf.Trans_Process,
-		Isdown:         conf.Download_Mod,
+		Uuid:         downloadID,
+		UserUuid:     param.UserUuid,
+		UserFileUuid: param.UserFileUuid,
+		ParentUuid:   param.ParentUuid,
+		FileKey:      fileKey,
+		Hash:         user_file.Hash,
+		LocalPath:    param.LocalPath,
+		Size:         user_file.Size,
+		Name:         user_file.Name,
+		Ext:          user_file.Ext,
+		Status:       conf.TransProcess,
+		Isdown:       conf.DownloadMod,
 	}
 	err = client.GetDBClient().CreateTrans(trans)
 	if err != nil {
@@ -149,20 +149,20 @@ func CompleteDownloadPartCOS(downloadID string) error {
 	if err != nil {
 		return errors.Wrap(err, "[CompleteDownloadPart] get download info error: ")
 	}
-	if _, ok := infoMap[conf.Download_Part_Info_CCount_Key]; !ok {
+	if _, ok := infoMap[conf.DownloadPartInfoCCountKey]; !ok {
 		return errors.Wrap(conf.MapNotHasError, "[CompleteDownloadPart] get chunk count error: ")
 	}
 	// 忽略错误
-	count, _ := strconv.Atoi(infoMap[conf.Download_Part_Info_CCount_Key])
+	count, _ := strconv.Atoi(infoMap[conf.DownloadPartInfoCCountKey])
 	// 除去info固定的n个，剩下的fields都对应一个已经上传的分片
 	// 如果分片不完整，则返回错误
-	if (count) != len(infoMap)-conf.Download_Part_COS_Info_Fileds {
+	if (count) != len(infoMap)-conf.DownloadPartCOSInfoFileds {
 		return errors.Wrap(conf.ChunkMissError, "[CompleteUploadPart] unable to complete: ")
 	}
 	// 删除rediskey
 	client.GetCacheClient().DelBatch(infoKey)
 	// 更改trans表记录状态
-	err = client.GetDBClient().UpdateTransState(downloadID, conf.Trans_Success)
+	err = client.GetDBClient().UpdateTransState(downloadID, conf.TransSuccess)
 	if err != nil {
 		return err
 	}
@@ -173,21 +173,21 @@ func CompleteDownloadPartCOS(downloadID string) error {
 // 获取COS签名
 func DownloadTotal(param *models.DownloadObjectParam) (string, error) {
 	// 接收参数
-	user_uuid := param.User_Uuid
-	user_file_uuid := param.User_File_Uuid
-	// downloadID := helper.GenDownloadID(user_uuid, user_file_uuid)
+	UserUuid := param.UserUuid
+	UserFileUuid := param.UserFileUuid
+	// downloadID := helper.GenDownloadID(UserUuid, UserFileUuid)
 	// 获取fileKey
-	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(user_file_uuid)
+	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(UserFileUuid)
 	if err != nil {
 		return "", err
 	}
 	// 查询file信息
-	user_file, err := client.GetDBClient().GetUserFileByUuid(user_file_uuid)
+	user_file, err := client.GetDBClient().GetUserFileByUuid(UserFileUuid)
 	if err != nil {
 		return "", err
 	}
 	// 获取预签名
-	url, err := client.GetCOSClient().GetPresignedUrl(fileKey, conf.Default_Sign_Expire)
+	url, err := client.GetCOSClient().GetPresignedUrl(fileKey, conf.DefaultSignExpire)
 	if err != nil {
 		return "", err
 	}
@@ -199,18 +199,18 @@ func DownloadTotal(param *models.DownloadObjectParam) (string, error) {
 	url = cfg.Domain + url
 	// 创建trans记录
 	trans := &models.Trans{
-		Uuid:           param.DownloadID,
-		User_Uuid:      user_uuid,
-		User_File_Uuid: param.User_File_Uuid,
-		Parent_Uuid:    param.Parent_Uuid,
-		File_Key:       fileKey,
-		Hash:           user_file.Hash,
-		Local_Path:     param.LocalPath,
-		Size:           user_file.Size,
-		Name:           user_file.Name,
-		Ext:            user_file.Ext,
-		Status:         conf.Trans_Success,
-		Isdown:         conf.Download_Mod,
+		Uuid:         param.DownloadID,
+		UserUuid:     UserUuid,
+		UserFileUuid: param.UserFileUuid,
+		ParentUuid:   param.ParentUuid,
+		FileKey:      fileKey,
+		Hash:         user_file.Hash,
+		LocalPath:    param.LocalPath,
+		Size:         user_file.Size,
+		Name:         user_file.Name,
+		Ext:          user_file.Ext,
+		Status:       conf.TransSuccess,
+		Isdown:       conf.DownloadMod,
 	}
 	err = client.GetDBClient().CreateTrans(trans)
 	if err != nil {

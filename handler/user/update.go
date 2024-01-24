@@ -1,9 +1,9 @@
 package user
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +22,11 @@ func UpdateUserNameHandler(c *gin.Context) {
 		return
 	}
 	// 检测登录态
-	var user_uuid string
+	var UserUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		UserUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if UserUuid == "" {
 		log.Error("UpdateUserNameHandler user uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -35,7 +35,7 @@ func UpdateUserNameHandler(c *gin.Context) {
 		return
 	}
 	// 更改
-	err := client.GetDBClient().UpdateUserName(user_uuid, userName)
+	err := client.GetDBClient().UpdateUserName(UserUuid, userName)
 	if err != nil {
 		log.Error("UpdateUserNameHandler server err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -45,7 +45,7 @@ func UpdateUserNameHandler(c *gin.Context) {
 		return
 	}
 	// 成功
-	log.Info("UpdateUserNameHandler success: ", user_uuid)
+	log.Info("UpdateUserNameHandler success: ", UserUuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,

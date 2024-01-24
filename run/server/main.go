@@ -1,8 +1,8 @@
 package main
 
 import (
-	"NetDesk/client"
-	"NetDesk/start"
+	"NetDisk/client"
+	"NetDisk/start"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +18,7 @@ func init() {
 	start.InitCOS() //对象存储
 	start.InitMQ()
 	start.InitMedia() // 媒体文件处理
+	start.InitLOS()
 	start.InitSocket()
 }
 

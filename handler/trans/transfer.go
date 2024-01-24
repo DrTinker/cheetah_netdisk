@@ -1,21 +1,21 @@
 package trans
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/service"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/service"
 
 	"github.com/sirupsen/logrus"
 )
 
 func TransferObjectHandler() {
 	// 初始化channel
-	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.Routing_Key)
+	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.RoutingKey)
 	if err != nil {
-		logrus.Error("[TransferObjectHandler] init channel error: %v", err)
+		logrus.Error("[TransferObjectHandler] init channel error: ", err)
 	}
-	err = client.GetMQClient().Consume(setting, conf.Transfer_COS_Queue, "transfer_consumer", service.TransferConsumerMsg)
+	err = client.GetMQClient().Consume(setting, conf.TransferCOSQueue, "transfer_consumer", service.TransferConsumerMsg)
 	if err != nil {
-		logrus.Error("[TransferObjectHandler] init channel error: %v", err)
+		logrus.Error("[TransferObjectHandler] init channel error: ", err)
 	}
 }

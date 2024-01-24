@@ -1,9 +1,9 @@
 package share
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/models"
 	"database/sql"
 	"net/http"
 	"time"
@@ -14,8 +14,8 @@ import (
 
 func UpdateShareHandler(c *gin.Context) {
 	// 获取share uuid
-	share_uuid := c.PostForm(conf.Share_Uuid)
-	if share_uuid == "" {
+	shareUuid := c.PostForm(conf.ShareUuid)
+	if shareUuid == "" {
 		log.Error("UpdateShareHandler share uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -24,7 +24,7 @@ func UpdateShareHandler(c *gin.Context) {
 		return
 	}
 	// 获取code
-	code := c.PostForm(conf.Share_Code)
+	code := c.PostForm(conf.ShareCode)
 	if code == "" {
 		log.Error("UpdateShareHandler code empty")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -34,12 +34,12 @@ func UpdateShareHandler(c *gin.Context) {
 		return
 	}
 	// 获取过期时间并转化
-	expireStr := c.PostForm(conf.Share_Expire_Time)
+	expireStr := c.PostForm(conf.ShareExpireTime)
 	var expire sql.NullTime
 	if expireStr != "" {
 		tmpExpire, err := time.Parse("2006-01-02 15:04:05", expireStr)
 		if err != nil {
-			log.Error("UpdateShareHandler expire_time invaild")
+			log.Error("UpdateShareHandler ExpireTime invaild")
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.HTTP_INVALID_PARAMS_CODE,
 				"msg":  conf.HTTP_INVALID_PARAMS_MESSAGE,
@@ -50,12 +50,12 @@ func UpdateShareHandler(c *gin.Context) {
 	}
 	// 封装结构体
 	share := &models.Share{
-		Uuid:        share_uuid,
-		Code:        code,
-		Expire_Time: expire,
+		Uuid:       shareUuid,
+		Code:       code,
+		ExpireTime: expire,
 	}
 	// 调用
-	err := client.GetDBClient().UpdateShareByUuid(share_uuid, share)
+	err := client.GetDBClient().UpdateShareByUuid(shareUuid, share)
 	if err != nil {
 		log.Error("UpdateShareHandler err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -65,7 +65,7 @@ func UpdateShareHandler(c *gin.Context) {
 		return
 	}
 	// 成功
-	log.Info("UpdateShareHandler success: ", share_uuid)
+	log.Info("UpdateShareHandler success: ", shareUuid)
 	c.JSON(http.StatusOK, gin.H{
 		"code": conf.HTTP_SUCCESS_CODE,
 		"msg":  conf.SUCCESS_RESP_MESSAGE,

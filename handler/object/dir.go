@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
-	"NetDesk/service"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
+	"NetDisk/service"
 
 	"fmt"
 	"net/http"
@@ -16,7 +16,7 @@ import (
 // 文件系统仅在服务端维护，不在cos存储中体现
 func MakeDirHandler(c *gin.Context) {
 	// 文件夹名称
-	folderName := c.PostForm(conf.File_Name_Key)
+	folderName := c.PostForm(conf.FileNameKey)
 	if folderName == "" {
 		log.Error("UploadHandler empty folder name")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -26,8 +26,8 @@ func MakeDirHandler(c *gin.Context) {
 		return
 	}
 
-	user_file_uuid_parent := c.PostForm(conf.Folder_Uuid_Key)
-	if user_file_uuid_parent == "" {
+	userFileUuidParent := c.PostForm(conf.FileParentKey)
+	if userFileUuidParent == "" {
 		log.Error("UploadHandler empty file key")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -37,11 +37,11 @@ func MakeDirHandler(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	var user_uuid string
+	var UserUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		UserUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if UserUuid == "" {
 		log.Error("MakeDirHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -50,15 +50,15 @@ func MakeDirHandler(c *gin.Context) {
 		return
 	}
 	// 生成ID
-	user_file_uuid := helper.GenUserFid(user_uuid, folderName)
+	userFileUuid := helper.GenUserFid(UserUuid, folderName)
 	// 插入数据库记录
 	folder := &models.UserFile{
-		Uuid:      user_file_uuid,
-		User_Uuid: user_uuid,
-		Name:      folderName,
-		Ext:       conf.Folder_Default_EXT,
+		Uuid:     userFileUuid,
+		UserUuid: UserUuid,
+		Name:     folderName,
+		Ext:      conf.FolderDefaultExt,
 	}
-	err := service.Mkdir(folder, user_file_uuid_parent)
+	err := service.Mkdir(folder, userFileUuidParent)
 	if err != nil {
 		log.Error("MakeDirHandler err: ", err)
 		c.JSON(http.StatusOK, gin.H{
@@ -68,10 +68,10 @@ func MakeDirHandler(c *gin.Context) {
 		return
 	}
 
-	log.Info("MakeDirHandler success: ", user_file_uuid)
+	log.Info("MakeDirHandler success: ", userFileUuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":    conf.HTTP_SUCCESS_CODE,
-		"file_id": user_file_uuid,
-		"msg":     fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
+		"code":   conf.HTTP_SUCCESS_CODE,
+		"fileID": userFileUuid,
+		"msg":    fmt.Sprintf(conf.UPLOAD_SUCCESS_MESSAGE),
 	})
 }

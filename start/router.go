@@ -3,11 +3,11 @@ package start
 import (
 	"github.com/gin-gonic/gin"
 
-	"NetDesk/handler/object"
-	"NetDesk/handler/share"
-	"NetDesk/handler/trans"
-	"NetDesk/handler/user"
-	middleware "NetDesk/middleware"
+	"NetDisk/handler/object"
+	"NetDisk/handler/share"
+	"NetDisk/handler/trans"
+	"NetDisk/handler/user"
+	middleware "NetDisk/middleware"
 )
 
 // 初始化路由
@@ -52,11 +52,13 @@ func RegisterRouter(r *gin.Engine) {
 
 		o.POST("/mkdir", middleware.JWT(true), object.MakeDirHandler)
 		o.GET("/list", middleware.JWT(true), object.GetFileListHandler)
+		o.GET("/info", middleware.JWT(true), object.GetFileInfoHandler)
+		// 单个的文件操作接口暂时弃用
 		o.POST("/copy", middleware.JWT(true), object.CopyFileHandler)
 		o.POST("/move", middleware.JWT(true), object.MoveFileHandler)
-		o.GET("/info", middleware.JWT(true), object.GetFileInfoHandler)
-		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
 		o.POST("/delete", middleware.JWT(true), object.FileDeleteHandler)
+
+		o.POST("/rename", middleware.JWT(true), object.FileUpdateHandler)
 
 		o.GET("/token", middleware.JWT(true), object.GetTokenHandler)
 

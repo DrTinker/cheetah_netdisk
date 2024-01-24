@@ -1,10 +1,10 @@
 package service
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -63,7 +63,7 @@ func picHandler(path, ext string) (flag bool, tnPath, tnName string) {
 		logrus.Error("[MediaHandler] open media err: ", err)
 		return false, "", ""
 	}
-	tnName = fmt.Sprintf("%s_tn.%s", name, conf.Default_Thumbnail_Ext)
+	tnName = fmt.Sprintf("%s_tn.%s", name, conf.DefaultThumbnailExt)
 	tnPath = cfg.TmpPath + "/" + tnName
 	err = client.GetMediaClient().GetPicThumbNail(path, tnPath)
 	if err != nil {
@@ -91,9 +91,9 @@ func videoHandler(path, ext string) (flag bool, tnPath, tnName string) {
 		logrus.Error("[MediaHandler] open media err: ", err)
 		return false, "", ""
 	}
-	tnName = fmt.Sprintf("%s_tn.%s", name, conf.Default_Thumbnail_Ext)
+	tnName = fmt.Sprintf("%s_tn.%s", name, conf.DefaultThumbnailExt)
 	tnPath = cfg.TmpPath + "/" + tnName
-	err = client.GetMediaClient().GetVideoThumbNail(path, tnPath, conf.Default_ThumbNail_Frame)
+	err = client.GetMediaClient().GetVideoThumbNail(path, tnPath, conf.DefaultThumbnailFrame)
 	if err != nil {
 		logrus.Error("[MediaHandler] get thumbnail err: ", err)
 		return false, "", ""

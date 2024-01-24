@@ -1,9 +1,9 @@
 package trans
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/service"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/service"
 	"net/http"
 	"strconv"
 
@@ -12,17 +12,19 @@ import (
 )
 
 // params: page: 页号
-//		   mod: 上传or下载
-//		   status: 状态（0传输中，1成功，2失败）
+//
+//	mod: 上传or下载
+//	status: 状态（0传输中，1成功，2失败）
+//
 // return: trans_list: 传输列表
 // 通过文件夹uuid获取该文件下全部文件信息
 func GetTransListHandler(c *gin.Context) {
 	// 获取用户ID
-	var user_uuid string
+	var UserUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		UserUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if UserUuid == "" {
 		log.Error("GetTransListHandler user id empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -31,7 +33,7 @@ func GetTransListHandler(c *gin.Context) {
 		return
 	}
 	// 获取页号
-	pageNumStr := c.Query(conf.Page_Num_Key)
+	pageNumStr := c.Query(conf.PageNumKey)
 	pageNum, err := strconv.Atoi(pageNumStr)
 	if err != nil {
 		log.Error("GetTransListHandler get page err: ", err)
@@ -41,7 +43,7 @@ func GetTransListHandler(c *gin.Context) {
 		})
 		return
 	}
-	modStr := c.Query(conf.Trans_Isdown_Key)
+	modStr := c.Query(conf.TransIsdownKey)
 	mod, err := strconv.Atoi(modStr)
 	if err != nil {
 		log.Error("GetTransListHandler mod err: ", err)
@@ -51,7 +53,7 @@ func GetTransListHandler(c *gin.Context) {
 		})
 		return
 	}
-	statusStr := c.Query(conf.Trans_Status_Key)
+	statusStr := c.Query(conf.TransStatusKey)
 	status, err := strconv.Atoi(statusStr)
 	if err != nil {
 		log.Error("GetTransListHandler mod err: ", err)
@@ -62,7 +64,7 @@ func GetTransListHandler(c *gin.Context) {
 		return
 	}
 	// 查询数据库获取列表
-	trans, err := service.GetTransList(user_uuid, pageNum, mod, status)
+	trans, err := service.GetTransList(UserUuid, pageNum, mod, status)
 	if err != nil || trans == nil {
 		log.Error("GetTransListHandler err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -75,8 +77,8 @@ func GetTransListHandler(c *gin.Context) {
 	// 返回数据
 	log.Info("GetTransListHandler success: ", len(trans))
 	c.JSON(http.StatusOK, gin.H{
-		"code":       conf.HTTP_SUCCESS_CODE,
-		"msg":        conf.LIST_TRANS_SUCCESS_MESSAGE,
-		"trans_list": trans,
+		"code":      conf.HTTP_SUCCESS_CODE,
+		"msg":       conf.LIST_TransSuccess_MESSAGE,
+		"transList": trans,
 	})
 }

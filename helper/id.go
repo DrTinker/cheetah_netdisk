@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"NetDesk/conf"
+	"NetDisk/conf"
 	"crypto/md5"
 	"fmt"
 
@@ -37,14 +37,14 @@ func GenUserFid(user, name string) string {
 
 // 生成fileKey
 func GenFileKey(hash, ext string) string {
-	return fmt.Sprintf("%s/%s.%s", conf.Default_System_Prefix, hash, ext)
+	return fmt.Sprintf("%s/%s.%s", conf.FilePrefix, hash, ext)
 }
 
 func GenThumbnailKey(name string) string {
 	if name == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/%s", conf.Default_Thumbnail_Prefix, name)
+	return fmt.Sprintf("%s/%s", conf.ThumbnailPrefix, name)
 }
 
 // 生成uploadID
@@ -56,9 +56,9 @@ func GenUploadID(user, hash string) string {
 	return fmt.Sprintf("%x", id)
 }
 
-func GenDownloadID(user, user_file_uuid string) string {
+func GenDownloadID(user, UserFileUuid string) string {
 	u := uuid.NewV4()
-	str := u.String() + user + user_file_uuid
+	str := u.String() + user + UserFileUuid
 	id := md5.Sum([]byte(str))
 
 	return fmt.Sprintf("%x", id)

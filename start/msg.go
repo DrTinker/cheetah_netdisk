@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/infrastructure/msg"
+	"NetDisk/client"
+	"NetDisk/infrastructure/msg"
 )
 
 func InitMsg() {

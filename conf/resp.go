@@ -21,7 +21,7 @@ const REGISTER_ERROR_MESSAGE = "Register error!"
 const REGISTER_REPEAT_MESSAGE = "User exist!"
 
 // 上传
-const UPLOAD_FAIL_MESSAGE = "File complete error"
+const UPLOAD_FAIL_MESSAGE = "File complete error %v"
 const GET_QUERY_ERROR_MESSAGE = ""
 const GET_VOLUME_ERROR_MESSAGE = "Get user volume error"
 const VOLUME_RUNOUT_ERROR_MESSAGE = "User volume run out"
@@ -50,4 +50,4 @@ const SHARE_EXPIRES_MSG = "The link expires "
 
 // 传输
 const GET_TRANS_INFO_FAIL_MESSAGE = "Get trans list error"
-const LIST_TRANS_SUCCESS_MESSAGE = "Get file list success"
+const LIST_TransSuccess_MESSAGE = "Get file list success"

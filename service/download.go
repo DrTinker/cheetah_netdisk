@@ -1,10 +1,10 @@
 package service
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"fmt"
 	"strconv"
 
@@ -12,22 +12,23 @@ import (
 )
 
 // 初始化传输，返回上传签名，并更新redis和db的值
+// 弃用，目前为从COS直接下载
 func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult, error) {
 	// 接收参数
 	downloadID := param.DownloadID
-	user_file_uuid := param.User_File_Uuid
+	UserFileUuid := param.UserFileUuid
 	// 查询file信息
-	user_file, err := client.GetDBClient().GetUserFileByUuid(user_file_uuid)
+	user_file, err := client.GetDBClient().GetUserFileByUuid(UserFileUuid)
 	if err != nil {
 		return nil, err
 	}
 	// 通过uuid查询文件信息
-	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(user_file_uuid)
+	fileKey, err := client.GetDBClient().GetFileKeyByUserFileUuid(UserFileUuid)
 	if err != nil {
 		return nil, err
 	}
 	// 检查下载文件的人是否是文件持有者
-	if user_file.User_Uuid != param.User_Uuid {
+	if user_file.UserUuid != param.UserUuid {
 		return nil, conf.InvaildOwnerError
 	}
 	// 生成filePath, 文件再本地暂存路径
@@ -43,7 +44,7 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 	// redis key
 	infoKey := helper.GenDownloadPartInfoKey(downloadID)
 	// 分片数量
-	count := size/conf.File_Part_Size_Max + 1
+	count := size/conf.FilePartSizeMax + 1
 	// 分片列表
 	var chunkList []int
 
@@ -60,7 +61,7 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 			}
 			res.ChunkCount = count
 			res.ChunkList = chunkList
-			res.DownloadID = tmpInfo[conf.Download_Part_Info_Key]
+			res.DownloadID = tmpInfo[conf.DownloadPartInfoKey]
 			res.Hash = hash
 			return res, nil
 		}
@@ -68,12 +69,12 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 	// 首次下载，先将COS文件下载到服务器
 	// 生成分块下载信息
 	info := map[string]interface{}{
-		conf.Download_Part_Info_Key:        downloadID,
-		conf.Download_Part_Info_CSize_Key:  conf.File_Part_Size_Max,
-		conf.Download_Part_Info_CCount_Key: count,
-		conf.Download_Part_File_Path_Key:   filePath,
-		conf.Download_Part_File_Size_Key:   size,
-		conf.Download_Part_Ready_Key:       conf.Download_Ready_Wait,
+		conf.DownloadPartInfoKey:       downloadID,
+		conf.DownloadPartInfoCSizeKey:  conf.FilePartSizeMax,
+		conf.DownloadPartInfoCCountKey: count,
+		conf.DownloadPartFilePathKey:   filePath,
+		conf.DownloadPartFileSizeKey:   size,
+		conf.DownloadPartReadyKey:      conf.DownloadReadyWait,
 	}
 	// 写redis
 	err = client.GetCacheClient().HMSet(infoKey, info)
@@ -91,8 +92,8 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 		FileHash:  hash,
 		TmpPath:   filePath,
 		FileKey:   fileKey,
-		StoreType: conf.Store_Type_COS,
-		Task:      conf.Download_Mod,
+		StoreType: conf.StoreTypeCOS,
+		Task:      conf.DownloadMod,
 	}
 	err = TransferProduceMsg(msg)
 	if err != nil {
@@ -104,18 +105,18 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 	// 调用此接口时，不论之前是nil还是fail都应更改状态为process
 	// 创建trans记录
 	trans := &models.Trans{
-		Uuid:           downloadID,
-		User_Uuid:      param.User_Uuid,
-		User_File_Uuid: param.User_File_Uuid,
-		Parent_Uuid:    param.Parent_Uuid,
-		File_Key:       fileKey,
-		Hash:           hash,
-		Local_Path:     param.LocalPath,
-		Size:           user_file.Size,
-		Name:           user_file.Name,
-		Ext:            user_file.Ext,
-		Status:         conf.Trans_Process,
-		Isdown:         conf.Download_Mod,
+		Uuid:         downloadID,
+		UserUuid:     param.UserUuid,
+		UserFileUuid: param.UserFileUuid,
+		ParentUuid:   param.ParentUuid,
+		FileKey:      fileKey,
+		Hash:         hash,
+		LocalPath:    param.LocalPath,
+		Size:         user_file.Size,
+		Name:         user_file.Name,
+		Ext:          user_file.Ext,
+		Status:       conf.TransProcess,
+		Isdown:       conf.DownloadMod,
 	}
 	err = client.GetDBClient().CreateTrans(trans)
 	if err != nil {
@@ -131,10 +132,11 @@ func InitDownload(param *models.DownloadObjectParam) (*models.InitDownloadResult
 	return res, nil
 }
 
+// 弃用，目前为从COS直接下载
 func CheckDownloadReady(downloadID string) (string, error) {
 	key := helper.GenDownloadPartInfoKey(downloadID)
 	// 读取redis
-	ready, err := client.GetCacheClient().HGet(key, conf.Download_Part_Ready_Key)
+	ready, err := client.GetCacheClient().HGet(key, conf.DownloadPartReadyKey)
 	if err != nil {
 		return "", errors.Wrap(err, "[CheckDownloadReady] get download info err: ")
 	}
@@ -145,17 +147,18 @@ func CheckDownloadReady(downloadID string) (string, error) {
 }
 
 // 分块下载
+// 弃用，目前为从COS直接下载
 func DownloadPart(downloadID string, chunkNum int) ([]byte, error) {
 	key := helper.GenDownloadPartInfoKey(downloadID)
 	// 读取redis
-	path, err := client.GetCacheClient().HGet(key, conf.Download_Part_File_Path_Key)
+	path, err := client.GetCacheClient().HGet(key, conf.DownloadPartFilePathKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "[DownloadPart] get download info err: ")
 	}
 	if path == "" {
 		return nil, errors.New("[DownloadPart] get download info err: empty path")
 	}
-	sizeStr, err := client.GetCacheClient().HGet(key, conf.Download_Part_File_Size_Key)
+	sizeStr, err := client.GetCacheClient().HGet(key, conf.DownloadPartFileSizeKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "[DownloadPart] get download info err: ")
 	}
@@ -172,8 +175,8 @@ func DownloadPart(downloadID string, chunkNum int) ([]byte, error) {
 		return nil, errors.Wrap(err, "[DownloadPart] update cache error: ")
 	}
 	// 写入buf
-	buf := make([]byte, conf.File_Part_Size_Max)
-	offset := (chunkNum - 1) * conf.File_Part_Size_Max
+	buf := make([]byte, conf.FilePartSizeMax)
+	offset := (chunkNum - 1) * conf.FilePartSizeMax
 	fileTmp.Seek(int64(offset), 0)
 	// 最后一个分片的大小
 	if len(buf) > int(size-offset) {
@@ -186,6 +189,7 @@ func DownloadPart(downloadID string, chunkNum int) ([]byte, error) {
 }
 
 // 分块下载完成
+// 弃用，目前为从COS直接下载
 func CompleteDownloadPart(downloadID string) error {
 	// 查看redis中记录是否完整
 	infoKey := helper.GenDownloadPartInfoKey(downloadID)
@@ -193,18 +197,18 @@ func CompleteDownloadPart(downloadID string) error {
 	if err != nil {
 		return errors.Wrap(err, "[CompleteDownloadPart] get download info error: ")
 	}
-	if _, ok := infoMap[conf.Download_Part_Info_CCount_Key]; !ok {
+	if _, ok := infoMap[conf.DownloadPartInfoCCountKey]; !ok {
 		return errors.Wrap(conf.MapNotHasError, "[CompleteDownloadPart] get chunk count error: ")
 	}
 	// 忽略错误
-	count, _ := strconv.Atoi(infoMap[conf.Download_Part_Info_CCount_Key])
+	count, _ := strconv.Atoi(infoMap[conf.DownloadPartInfoCCountKey])
 	// 除去info固定的n个，剩下的fields都对应一个已经上传的分片
 	// 如果分片不完整，则返回错误
-	if (count) != len(infoMap)-conf.Download_Part_Info_Fileds {
+	if (count) != len(infoMap)-conf.DownloadPartInfoFileds {
 		return errors.Wrap(conf.ChunkMissError, "[CompleteUploadPart] unable to complete: ")
 	}
 	// 删除文件
-	filePath, err := client.GetCacheClient().HGet(infoKey, conf.Download_Part_File_Path_Key)
+	filePath, err := client.GetCacheClient().HGet(infoKey, conf.DownloadPartFilePathKey)
 	if err != nil {
 		return errors.Wrap(err, "[CompleteDownloadPart] get file info err: ")
 	}
@@ -212,7 +216,7 @@ func CompleteDownloadPart(downloadID string) error {
 	// 删除rediskey
 	client.GetCacheClient().DelBatch(infoKey)
 	// 更改trans表记录状态
-	err = client.GetDBClient().UpdateTransState(downloadID, conf.Trans_Success)
+	err = client.GetDBClient().UpdateTransState(downloadID, conf.TransSuccess)
 	if err != nil {
 		return err
 	}

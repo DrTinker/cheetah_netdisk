@@ -36,7 +36,7 @@ type User struct {
 }
 
 type UserInfo struct {
-	Uuid  string
-	Name  string
-	Level int // 0: 普通用户， 1：VIP用户， 2：特权用户
+	Uuid  string `json:"userID"`
+	Name  string `json:"userName"`
+	Level int    `json:"level"` // 0: 普通用户， 1：VIP用户， 2：特权用户
 }

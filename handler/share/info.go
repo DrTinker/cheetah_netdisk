@@ -1,9 +1,9 @@
 package share
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/service"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/service"
 	"net/http"
 	"strconv"
 
@@ -14,8 +14,8 @@ import (
 // 查询分享链接
 func GetShareInfoHandler(c *gin.Context) {
 	// 获取uuid
-	share_uuid := c.Query(conf.Share_Uuid)
-	if share_uuid == "" {
+	shareUuid := c.Query(conf.ShareUuid)
+	if shareUuid == "" {
 		log.Error("GetShareInfoHandler share uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -24,9 +24,9 @@ func GetShareInfoHandler(c *gin.Context) {
 		return
 	}
 	// 查询数据库
-	info, time_out, err := service.GetShareInfo(share_uuid)
+	info, time_out, err := service.GetShareInfo(shareUuid)
 	if err == conf.DBNotFoundError || err == conf.FileDeletedError {
-		log.Warn("GetShareInfoHandler record not found", share_uuid)
+		log.Warn("GetShareInfoHandler record not found", shareUuid)
 		c.JSON(http.StatusOK, gin.H{
 			"code": conf.RECORD_DELETED_CODE,
 			"msg":  conf.RECORD_DELETED_MSG,
@@ -42,7 +42,7 @@ func GetShareInfoHandler(c *gin.Context) {
 		return
 	}
 	// 成功
-	log.Info("GetShareInfoHandler success: ", share_uuid)
+	log.Info("GetShareInfoHandler success: ", shareUuid)
 	// 分享过期
 	if time_out {
 		c.JSON(http.StatusOK, gin.H{
@@ -62,11 +62,11 @@ func GetShareInfoHandler(c *gin.Context) {
 // 获取分享列表
 func GetShareListHandler(c *gin.Context) {
 	// 获取用户ID
-	var user_uuid string
+	var userUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		userUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if userUuid == "" {
 		log.Error("GetTransListHandler user id empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -75,7 +75,7 @@ func GetShareListHandler(c *gin.Context) {
 		return
 	}
 	// 获取页号
-	pageNumStr := c.Query(conf.Page_Num_Key)
+	pageNumStr := c.Query(conf.PageNumKey)
 	pageNum, err := strconv.Atoi(pageNumStr)
 	if err != nil {
 		log.Error("GetShareListHandler get page err: ", err)
@@ -85,7 +85,7 @@ func GetShareListHandler(c *gin.Context) {
 		})
 		return
 	}
-	modStr := c.Query(conf.Share_Mod)
+	modStr := c.Query(conf.ShareMod)
 	mod, err := strconv.Atoi(modStr)
 	if err != nil {
 		log.Error("GetShareListHandler mod err: ", err)
@@ -96,7 +96,7 @@ func GetShareListHandler(c *gin.Context) {
 		return
 	}
 	// 查询数据库
-	info, err := service.GetShareList(user_uuid, pageNum, mod)
+	info, err := service.GetShareList(userUuid, pageNum, mod)
 	if err != nil {
 		log.Error("GetShareListHandler get info error ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -106,11 +106,11 @@ func GetShareListHandler(c *gin.Context) {
 		return
 	}
 	// 成功
-	log.Info("GetShareListHandler success: ", user_uuid)
+	log.Info("GetShareListHandler success: ", userUuid)
 	// 未过期
 	c.JSON(http.StatusOK, gin.H{
-		"code":       conf.HTTP_SUCCESS_CODE,
-		"msg":        conf.SUCCESS_RESP_MESSAGE,
-		"share_list": info,
+		"code":      conf.HTTP_SUCCESS_CODE,
+		"msg":       conf.SUCCESS_RESP_MESSAGE,
+		"shareList": info,
 	})
 }

@@ -1,10 +1,10 @@
 package user
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"fmt"
 	"net/http"
 
@@ -45,8 +45,8 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	// 判断验证码是否有效
-	src := c.Query(conf.Code_Param_Key)
-	key := helper.GenVerifyCodeKey(conf.Code_Cache_Key, user.Email)
+	src := c.Query(conf.CodeParamKey)
+	key := helper.GenVerifyCodeKey(conf.CodeCacheKey, user.Email)
 	code, err := client.GetCacheClient().Get(key)
 	if err != nil || code == "" || src != code {
 		log.Error("RegisterHandler: verify code error ", err)
@@ -66,21 +66,21 @@ func RegisterHandler(c *gin.Context) {
 
 	// 生成用户空间根目录uuid
 	folderName := fmt.Sprintf("%s-%s", user.Name, user.Uuid)
-	user_file_uuid := helper.GenUserFid(user.Uuid, folderName)
-	user.StartUuid = user_file_uuid
+	UserFileUuid := helper.GenUserFid(user.Uuid, folderName)
+	user.StartUuid = UserFileUuid
 	// 生成user_file结构体
 	user_file := &models.UserFile{
-		Uuid:      user_file_uuid,
-		User_Uuid: id,
-		Parent_Id: conf.Default_System_parent,
-		Name:      folderName,
-		Ext:       conf.Folder_Default_EXT,
+		Uuid:     UserFileUuid,
+		UserUuid: id,
+		ParentId: conf.DefaultSystemparent,
+		Name:     folderName,
+		Ext:      conf.FolderDefaultExt,
 	}
 
 	// 创建用户记录，同时创建用户空间根目录
 	err = client.GetDBClient().CreateUser(user, user_file)
 	if err != nil {
-		log.Error("RegisterHandler err: %+v", err)
+		log.Error("RegisterHandler err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": conf.SERVER_ERROR_CODE,
 			"msg":  conf.SERVER_ERROR_MSG,
@@ -91,8 +91,8 @@ func RegisterHandler(c *gin.Context) {
 	// 返回成功
 	log.Info("RegisterHandler success: ", user.Uuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":    conf.HTTP_SUCCESS_CODE,
-		"msg":     conf.SUCCESS_RESP_MESSAGE,
-		"user_id": id,
+		"code":   conf.HTTP_SUCCESS_CODE,
+		"msg":    conf.SUCCESS_RESP_MESSAGE,
+		"userId": id,
 	})
 }

@@ -1,10 +1,10 @@
 package object
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
-	"NetDesk/service"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
+	"NetDisk/service"
 	"encoding/json"
 	"net/http"
 
@@ -36,11 +36,11 @@ func CopyFileBatchHandler(c *gin.Context) {
 		return
 	}
 	// 获取用户ID
-	var user_uuid string
+	var userUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		userUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if userUuid == "" {
 		logrus.Error("CopyFileBatchHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -52,7 +52,7 @@ func CopyFileBatchHandler(c *gin.Context) {
 	success := make([]string, 0)
 	fail := make([]string, 0)
 	for _, task := range taskList.Src {
-		err := service.CopyObject(task, taskList.Des, user_uuid)
+		err := service.CopyObject(task, taskList.Des, userUuid)
 		if err != nil {
 			logrus.Error("CopyFileBatchHandler copy err: ", err)
 			fail = append(fail, task)
@@ -138,7 +138,7 @@ func DeleteFileBatchHandler(c *gin.Context) {
 	fail := make([]string, 0)
 	for _, task := range taskList.Src {
 		err := service.DeleteObject(task)
-		if err != nil {
+		if err != nil && err != conf.DBNotFoundError {
 			logrus.Error("DeleteFileBatchHandler delete err: ", err)
 			fail = append(fail, task)
 		} else {

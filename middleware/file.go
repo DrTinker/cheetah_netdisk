@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
 	"io/ioutil"
 	"net/http"
 
@@ -16,7 +16,7 @@ import (
 func ExistCheck(mod int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取前端传入文件md5值
-		md5 := c.PostForm(conf.File_Hash_Key)
+		md5 := c.PostForm(conf.FileHashKey)
 		if md5 == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code": conf.ERROR_FILE_HASH_CODE,
@@ -26,8 +26,8 @@ func ExistCheck(mod int) gin.HandlerFunc {
 			return
 		}
 		// gin不能重复读取body
-		c.Set(conf.File_Hash_Key, md5)
-		c.Set(conf.File_Quick_Upload_Key, false)
+		c.Set(conf.FileHashKey, md5)
+		c.Set(conf.FileQuickUploadKey, false)
 		// 通过数据库查询文件是否存在
 		flag, uuid, err := client.GetDBClient().CheckFileExist(md5)
 		if err != nil {
@@ -53,8 +53,8 @@ func ExistCheck(mod int) gin.HandlerFunc {
 			// mod 1 放行并标记
 			case 1:
 				log.Info("ExistCheck middleware file exist, hash: ", md5)
-				c.Set(conf.File_Uuid_Key, uuid)
-				c.Set(conf.File_Quick_Upload_Key, true)
+				c.Set(conf.FileUuidKey, uuid)
+				c.Set(conf.FileQuickUploadKey, true)
 			}
 		}
 		c.Next()
@@ -65,7 +65,7 @@ func ExistCheck(mod int) gin.HandlerFunc {
 func FileCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// gin获取文件
-		file, err := c.FormFile(conf.File_Form_Key)
+		file, err := c.FormFile(conf.FileFormKey)
 		if err != nil {
 			log.Error("FileCheck err: ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -97,7 +97,7 @@ func FileCheck() gin.HandlerFunc {
 			return
 		}
 		// 获取前端传入文件md5值
-		md5 := c.PostForm(conf.File_Hash_Key)
+		md5 := c.PostForm(conf.FileHashKey)
 		if md5 == "" {
 			log.Error("FileCheck file md5 value invaild")
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -108,8 +108,8 @@ func FileCheck() gin.HandlerFunc {
 			return
 		}
 		// gin不能重复读取body
-		c.Set(conf.File_Hash_Key, md5)
-		c.Set(conf.File_Form_Key, data)
+		c.Set(conf.FileHashKey, md5)
+		c.Set(conf.FileFormKey, data)
 		// 比较md5值
 		hash := helper.CountMD5("", data, 1)
 		if hash != md5 {

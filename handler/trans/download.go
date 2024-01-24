@@ -1,11 +1,11 @@
 package trans
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
-	"NetDesk/service"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
+	"NetDisk/service"
 	"errors"
 	"net/http"
 	"strconv"
@@ -17,9 +17,9 @@ import (
 
 // 客户端从服务端下载完整文件
 func DownloadFileHandler(c *gin.Context) {
-	// 获取user_file_uuid
-	user_file_uuid := c.Query(conf.File_Uuid_Key)
-	if user_file_uuid == "" {
+	// 获取UserFileUuid
+	userFileUuid := c.Query(conf.FileUuidKey)
+	if userFileUuid == "" {
 		log.Error("DownloadFileHandler err: user file uuid rmpty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -28,8 +28,8 @@ func DownloadFileHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	local_path := c.Query(conf.File_Local_Path_Key)
-	if local_path == "" {
+	localPath := c.Query(conf.FileLocalPathKey)
+	if localPath == "" {
 		log.Error("DownloadFileHandler invaild local path")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -38,7 +38,7 @@ func DownloadFileHandler(c *gin.Context) {
 		return
 	}
 	// 云存储路径
-	remotePath := c.Query(conf.File_Remote_Path_Key)
+	remotePath := c.Query(conf.FileRemotePathKey)
 	if remotePath == "" {
 		log.Error("InitDownloadHandler empty remote path")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -48,8 +48,8 @@ func DownloadFileHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	parent_uuid := c.Query(conf.Folder_Uuid_Key)
-	if parent_uuid == "" {
+	parentUuid := c.Query(conf.FileParentKey)
+	if parentUuid == "" {
 		log.Error("DownloadFileHandler invaild parent")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -59,11 +59,11 @@ func DownloadFileHandler(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	var user_uuid string
+	var userUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		userUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if userUuid == "" {
 		log.Error("DownloadFileHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -72,14 +72,14 @@ func DownloadFileHandler(c *gin.Context) {
 		return
 	}
 	// 生成ID
-	downloadID := helper.GenDownloadID(user_uuid, user_file_uuid)
+	downloadID := helper.GenDownloadID(userUuid, userFileUuid)
 	param := &models.DownloadObjectParam{
-		DownloadID:     downloadID,
-		User_File_Uuid: user_file_uuid,
-		User_Uuid:      user_uuid,
-		Parent_Uuid:    parent_uuid,
-		LocalPath:      local_path,
-		RemotePath:     remotePath,
+		DownloadID:   downloadID,
+		UserFileUuid: userFileUuid,
+		UserUuid:     userUuid,
+		ParentUuid:   parentUuid,
+		LocalPath:    localPath,
+		RemotePath:   remotePath,
 	}
 
 	// 调用service获取COS token
@@ -94,21 +94,21 @@ func DownloadFileHandler(c *gin.Context) {
 	}
 
 	// 返回签名
-	log.Info("DownloadFileHandler success: ", user_file_uuid)
+	log.Info("DownloadFileHandler success: ", userFileUuid)
 	c.JSON(http.StatusOK, gin.H{
-		"code":        conf.HTTP_SUCCESS_CODE,
-		"msg":         conf.SUCCESS_RESP_MESSAGE,
-		"file_token":  fileToken,
-		"download_id": downloadID,
+		"code":       conf.HTTP_SUCCESS_CODE,
+		"msg":        conf.SUCCESS_RESP_MESSAGE,
+		"fileToken":  fileToken,
+		"downloadID": downloadID,
 	})
 }
 
 // websocket实现下载
 // 弃用
 func DownloadFileBySocketHandler(c *gin.Context) {
-	// 获取user_file_uuid
-	user_file_uuid := c.Query(conf.File_Uuid_Key)
-	if user_file_uuid == "" {
+	// 获取UserFileUuid
+	UserFileUuid := c.Query(conf.FileUuidKey)
+	if UserFileUuid == "" {
 		log.Error("DownloadFileBySocketHandler err: user file uuid rmpty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -117,8 +117,8 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	local_path := c.Query(conf.File_Local_Path_Key)
-	if local_path == "" {
+	LocalPath := c.Query(conf.FileLocalPathKey)
+	if LocalPath == "" {
 		log.Error("DownloadFileBySocketHandler invaild local path")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -127,8 +127,8 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	parent_uuid := c.Query(conf.Folder_Uuid_Key)
-	if parent_uuid == "" {
+	ParentUuid := c.Query(conf.FileParentKey)
+	if ParentUuid == "" {
 		log.Error("DownloadFileBySocketHandler invaild parent")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -137,11 +137,11 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 		return
 	}
 	// 获取用户ID
-	var user_uuid string
+	var UserUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		UserUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if UserUuid == "" {
 		log.Error("DownloadFileBySocketHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -150,22 +150,22 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 		return
 	}
 	// uploadID用于断点续传
-	downloadID := c.Query(conf.File_Download_ID_Key)
+	downloadID := c.Query(conf.FileDownloadIDKey)
 	continueFlag := true
 	if downloadID == "" {
-		downloadID = helper.GenDownloadID(user_uuid, user_file_uuid)
+		downloadID = helper.GenDownloadID(UserUuid, UserFileUuid)
 		continueFlag = false
 	}
 
 	param := &models.DownloadObjectParam{
-		Req:            *c.Request,
-		Resp:           c.Writer,
-		DownloadID:     downloadID,
-		User_File_Uuid: user_file_uuid,
-		User_Uuid:      user_uuid,
-		Parent_Uuid:    parent_uuid,
-		LocalPath:      local_path,
-		Continue:       continueFlag,
+		Req:          *c.Request,
+		Resp:         c.Writer,
+		DownloadID:   downloadID,
+		UserFileUuid: UserFileUuid,
+		UserUuid:     UserUuid,
+		ParentUuid:   ParentUuid,
+		LocalPath:    LocalPath,
+		Continue:     continueFlag,
 	}
 	// 建立ws连接
 	err := client.GetSocketClient().AddConn(param.Resp, &param.Req, downloadID)
@@ -194,26 +194,29 @@ func DownloadFileBySocketHandler(c *gin.Context) {
 		"code":        conf.HTTP_SUCCESS_CODE,
 		"msg":         conf.SUCCESS_RESP_MESSAGE,
 		"download_id": res.DownloadID,
-		"chunk_size":  conf.File_Part_Size_Max,
+		"chunk_size":  conf.FilePartSizeMax,
 		"chunk_count": res.ChunkCount,
 		"chunk_list":  res.ChunkList,
 		"hash":        res.Hash,
 	})
 }
 
-// param: file_uuid: 文件的uer_file_uuid
-//		  local_path: 存储文件的客户端本地路径
-//		  parent_uuid: 父级文件夹的user_file_uuid
-// 		  download_id: 下载ID
+// param: FileUuid: 文件的uer_FileUuid
+//
+//	LocalPath: 存储文件的客户端本地路径
+//	ParentUuid: 父级文件夹的UserFileUuid
+//	download_id: 下载ID
+//
 // return: download_id: 本次分块上传唯一标识
-//		   chunk_size: 分块大小
-// 		   chunk_count: 分块数量
-// 		   chunk_list: 已经上传的分块列表
-// 		   hash: 文件的hash值
+//
+//	chunk_size: 分块大小
+//	chunk_count: 分块数量
+//	chunk_list: 已经上传的分块列表
+//	hash: 文件的hash值
 func InitDownloadHandler(c *gin.Context) {
-	// 获取user_file_uuid
-	user_file_uuid := c.Query(conf.File_Uuid_Key)
-	if user_file_uuid == "" {
+	// 获取UserFileUuid
+	userFileUuid := c.Query(conf.FileUuidKey)
+	if userFileUuid == "" {
 		log.Error("InitDownloadHandler err: user file uuid rmpty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -222,8 +225,8 @@ func InitDownloadHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	local_path := c.Query(conf.File_Local_Path_Key)
-	if local_path == "" {
+	LocalPath := c.Query(conf.FileLocalPathKey)
+	if LocalPath == "" {
 		log.Error("InitDownloadHandler invaild local path")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -232,7 +235,7 @@ func InitDownloadHandler(c *gin.Context) {
 		return
 	}
 	// 云存储路径
-	remotePath := c.Query(conf.File_Remote_Path_Key)
+	remotePath := c.Query(conf.FileRemotePathKey)
 	if remotePath == "" {
 		log.Error("InitDownloadHandler empty remote path")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -242,8 +245,8 @@ func InitDownloadHandler(c *gin.Context) {
 		return
 	}
 	// 用户本地存储路径
-	parent_uuid := c.Query(conf.Folder_Uuid_Key)
-	if parent_uuid == "" {
+	parentUuid := c.Query(conf.FileParentKey)
+	if parentUuid == "" {
 		log.Error("InitDownloadHandler invaild parent")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -252,11 +255,11 @@ func InitDownloadHandler(c *gin.Context) {
 		return
 	}
 	// 获取用户ID
-	var user_uuid string
+	var userUuid string
 	if idstr, f := c.Get(conf.UserID); f {
-		user_uuid = helper.Strval(idstr)
+		userUuid = helper.Strval(idstr)
 	}
-	if user_uuid == "" {
+	if userUuid == "" {
 		log.Error("InitDownloadHandler uuid empty")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code": conf.HTTP_INVALID_PARAMS_CODE,
@@ -265,20 +268,20 @@ func InitDownloadHandler(c *gin.Context) {
 		return
 	}
 	// downloadID用于断点续传
-	downloadID := c.Query(conf.File_Download_ID_Key)
+	downloadID := c.Query(conf.FileDownloadIDKey)
 	continueFlag := true
 	if downloadID == "" {
-		downloadID = helper.GenDownloadID(user_uuid, user_file_uuid)
+		downloadID = helper.GenDownloadID(userUuid, userFileUuid)
 		continueFlag = false
 	}
 	param := &models.DownloadObjectParam{
-		DownloadID:     downloadID,
-		User_File_Uuid: user_file_uuid,
-		User_Uuid:      user_uuid,
-		Parent_Uuid:    parent_uuid,
-		LocalPath:      local_path,
-		RemotePath:     remotePath,
-		Continue:       continueFlag,
+		DownloadID:   downloadID,
+		UserFileUuid: userFileUuid,
+		UserUuid:     userUuid,
+		ParentUuid:   parentUuid,
+		LocalPath:    LocalPath,
+		RemotePath:   remotePath,
+		Continue:     continueFlag,
 	}
 	res, err := service.InitDownloadCOS(param)
 	if err != nil {
@@ -299,21 +302,21 @@ func InitDownloadHandler(c *gin.Context) {
 	// 成功
 	log.Info("InitDownloadHandler success: ", res.DownloadID)
 	c.JSON(http.StatusOK, gin.H{
-		"code":        conf.HTTP_SUCCESS_CODE,
-		"msg":         conf.SUCCESS_RESP_MESSAGE,
-		"download_id": res.DownloadID,
-		"chunk_size":  conf.File_Part_Size_Max,
-		"chunk_count": res.ChunkCount,
-		"chunk_list":  res.ChunkList,
-		"hash":        res.Hash,
-		"url":         res.Url,
+		"code":       conf.HTTP_SUCCESS_CODE,
+		"msg":        conf.SUCCESS_RESP_MESSAGE,
+		"downloadID": res.DownloadID,
+		"chunkSize":  conf.FilePartSizeMax,
+		"chunkCount": res.ChunkCount,
+		"chunkList":  res.ChunkList,
+		"hash":       res.Hash,
+		"url":        res.Url,
 	})
 }
 
 // 轮询接口，查看服务端请求下载的文件是否准备好
 func CheckDownloadReadyHandler(c *gin.Context) {
 	// 获取dowanloadID
-	downloadID := c.Query(conf.File_Download_ID_Key)
+	downloadID := c.Query(conf.FileDownloadIDKey)
 	if downloadID == "" {
 		log.Error("CheckDownloadReadyHandler err: downloadID empty")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -344,7 +347,7 @@ func CheckDownloadReadyHandler(c *gin.Context) {
 // 客户端从服务端下载文件分片
 func DownloadPartHandler(c *gin.Context) {
 	// 获取dowanloadID
-	downloadID := c.Query(conf.File_Download_ID_Key)
+	downloadID := c.Query(conf.FileDownloadIDKey)
 	if downloadID == "" {
 		log.Error("DownloadPartHandler err: downloadID empty")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -355,7 +358,7 @@ func DownloadPartHandler(c *gin.Context) {
 	}
 	// 调用service下载COS文件至tmp
 	// 获取chunknum
-	chunkNum := c.Query(conf.File_Chunk_Num_Key)
+	chunkNum := c.Query(conf.FileChunkNumKey)
 	num, err := strconv.Atoi(chunkNum)
 	if err != nil {
 		log.Error("DownloadPartHandler invaild chunk number")
@@ -395,7 +398,7 @@ func DownloadPartHandler(c *gin.Context) {
 
 func CompleteDownloadPartHandler(c *gin.Context) {
 	// 获取dowanloadID
-	downloadID := c.Query(conf.File_Download_ID_Key)
+	downloadID := c.Query(conf.FileDownloadIDKey)
 	if downloadID == "" {
 		log.Error("CompleteDownloadPartHandler err: downloadID empty")
 		c.JSON(http.StatusBadRequest, gin.H{

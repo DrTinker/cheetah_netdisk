@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/infrastructure/media"
+	"NetDisk/client"
+	"NetDisk/infrastructure/media"
 )
 
 func InitMedia() {

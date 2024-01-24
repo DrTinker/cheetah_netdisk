@@ -1,9 +1,9 @@
 package cos
 
 import (
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"bytes"
 	"context"
 	"fmt"
@@ -49,7 +49,7 @@ func NewCOSClientImpl(cfg *models.COSConfig) (*COSClientImpl, error) {
 // 上传本地磁盘文件， key为COS中路径，path为本地路径(绝对路径)
 func (c *COSClientImpl) UpLoadLocalFile(key, path string) error {
 	_, _, err := c.COSClient.Object.Upload(context.Background(), key, path, &cos.MultiUploadOptions{
-		ThreadPoolSize: conf.Default_Thread_Pool_Size,
+		ThreadPoolSize: conf.DefaultThreadPoolSize,
 	})
 	if err != nil {
 		return errors.Wrap(err, "[COSClientImpl] UpLoadLocalFile upload file error: ")
@@ -145,7 +145,7 @@ func (c *COSClientImpl) GetPresignedUrl(fileKey string, expire time.Duration) (u
 // 下载COS文件至服务端磁盘
 func (c *COSClientImpl) DownloadLocal(fileKey, path string) error {
 	opt := &cos.MultiDownloadOptions{
-		ThreadPoolSize: conf.Default_Thread_Pool_Size,
+		ThreadPoolSize: conf.DefaultThreadPoolSize,
 	}
 	_, err := c.COSClient.Object.Download(context.Background(), fileKey, path, opt)
 	if err != nil {
@@ -162,7 +162,7 @@ func (c *COSClientImpl) UpLoadStreamPart(key string, stream io.Reader, opts *mod
 		return errors.Wrap(err, "[COSClientImpl] UpLoadFileStreamPart parse data error: ")
 	}
 	// 为文件分片
-	slices := helper.ArrayInGroupsOf(data, conf.File_Part_Size_Max)
+	slices := helper.ArrayInGroupsOf(data, conf.FilePartSizeMax)
 	batch := len(slices)
 	log.Info("[COSClientImpl] UpLoadFileStream batch: ", batch, "total size: ", len(data))
 	// 初始化分块上传

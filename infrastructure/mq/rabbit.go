@@ -1,8 +1,8 @@
 package mq
 
 import (
-	"NetDesk/conf"
-	"NetDesk/models"
+	"NetDisk/conf"
+	"NetDisk/models"
 	"fmt"
 	"time"
 
@@ -27,6 +27,8 @@ func NewMQClientImpl(url string) (*MQClientImpl, error) {
 	if err != nil {
 		return nil, err
 	}
+	// 创建队列
+	// 监听机制
 	closeReciver := make(chan *amqp.Error)
 	blockReciver := make(chan amqp.Blocking)
 	// 注入mq对象
@@ -81,6 +83,33 @@ func (m *MQClientImpl) InitTransfer(exchange, key string) (*models.TransferSetti
 	if err != nil {
 		return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer err:")
 	}
+	// 不要在代码中声明队列，交换机，binding 参考：https://juejin.cn/post/7125719003510603783
+	// 初始化队列，交换机，binding规则
+	// 声明交换机
+	// err = channel.ExchangeDeclare(conf.Exchange, "direct",
+	// 	true,  // 持久化
+	// 	false, // 自动删除
+	// 	false, // 内置交换机
+	// 	true,  // noWait
+	// 	nil,   // 其他配置
+	// )
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer declare exchange err:")
+	// }
+	// // 声明队列，存在则忽视
+	// qInfo, err := channel.QueueDeclare(conf.TransferCOSQueue,
+	// 	true,  // 持久化
+	// 	false, // 自动删除，false指断开connection本队列不会自动删除
+	// 	false, // 排他性，为true只为本connection中channel共享，conn断开后自动删除
+	// 	true,  // noWait true表示创建不需要等服务器确认
+	// 	nil,   // 其他配置，暂时不用
+	// )
+	// logrus.Info("[MQClientImpl] InitTransfer queue info: ", qInfo)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer declare queue err:")
+	// }
+	// // 绑定交换机和队列
+	// channel.QueueBind()
 	settings := &models.TransferSetting{
 		Channel:   channel,
 		Exchange:  exchange,
@@ -112,7 +141,7 @@ func (m *MQClientImpl) Publish(setting *models.TransferSetting, msg []byte) erro
 		false, // 消息无法正确被路由则丢弃
 		false, // 参数不起作用，原因未知
 		amqp.Publishing{
-			ContentType: conf.Default_Content_Type,
+			ContentType: conf.DefaultContentType,
 			Body:        msg,
 		},
 	)

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"NetDesk/models"
+	"NetDisk/models"
 	"sync"
 )
 

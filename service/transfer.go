@@ -1,11 +1,12 @@
 package service
 
 import (
-	"NetDesk/client"
-	"NetDesk/conf"
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/client"
+	"NetDisk/conf"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +23,8 @@ func TransferConsumerMsg(msg []byte) bool {
 	}
 	// 判断任务类型
 	// 下载任务
-	if data.Task == conf.Download_Mod {
+	// 弃用，目前为从COS直接下载
+	if data.Task == conf.DownloadMod {
 		key := helper.GenDownloadPartInfoKey(data.TransID)
 		// 查看文件是否已经存在
 		exist, _ := helper.PathExists(data.TmpPath)
@@ -32,28 +34,48 @@ func TransferConsumerMsg(msg []byte) bool {
 			if err != nil {
 				log.Error("[TransferConsumerMsg] parse msg error: ", err)
 				// 更新状态为abort
-				client.GetCacheClient().HSet(key, conf.Download_Part_Ready_Key, conf.Download_Ready_Abort)
+				client.GetCacheClient().HSet(key, conf.DownloadPartReadyKey, conf.DownloadReadyAbort)
 				return false
 			}
 		}
 		// 存在直接更新
 		// 更新状态为done
-		client.GetCacheClient().HSet(key, conf.Download_Part_Ready_Key, conf.Download_Ready_Done)
+		client.GetCacheClient().HSet(key, conf.DownloadPartReadyKey, conf.DownloadReadyDone)
 		log.Info("[TransferConsumerMsg] transfer file ", data.TmpPath, " success")
 		return true
 	}
 	// 上传任务
+	// 拼接磁盘临时地址
+	cfg, err := client.GetConfigClient().GetLocalConfig()
+	if err != nil {
+		log.Error("[TransferConsumerMsg] get loacl config error: ", err)
+		return false
+	}
+	filePath, tnPath := fmt.Sprintf("%s/%s", cfg.TmpPath, data.FileName), fmt.Sprintf("%s/%s", cfg.TmpPath, data.TnName)
+	// 删除磁盘临时文件
+	defer func() {
+		helper.DelFile(filePath)
+		helper.DelFile(tnPath)
+	}()
+
+	// 先处理缩略图，减少用户延迟感知
+	// 下载缩略图, 不处理缩略图缺失
+	client.GetLOSClient().FGetObject(data.Thumbnail, tnPath)
+	// 读取缩略图上传, 不处理缩略图缺失
+	client.GetCOSClient().UpLoadLocalFile(data.TnFileKey, tnPath)
+
+	// 后处理文件
+	// 从los下载文件到本地磁盘
+	err = client.GetLOSClient().FGetObject(data.TmpPath, filePath)
+	if err != nil {
+		log.Error("[TransferConsumerMsg] get file from los error: ", err)
+		return false
+	}
 	// 根据msg读取本地文件上传cos
-	err = client.GetCOSClient().UpLoadLocalFile(data.FileKey, data.TmpPath)
+	err = client.GetCOSClient().UpLoadLocalFile(data.FileKey, filePath)
 	if err != nil {
 		log.Error("[TransferConsumerMsg] upload cos error: ", err)
 		return false
-	}
-	// 读取缩略图上传
-	err = client.GetCOSClient().UpLoadLocalFile(data.TnFileKey, data.Thumbnail)
-	// 没有缩略图只提示
-	if err != nil {
-		log.Warn("[TransferConsumerMsg] upload thumbnail cos error: ", data.FileKey, err)
 	}
 
 	// 修改数据表
@@ -62,29 +84,19 @@ func TransferConsumerMsg(msg []byte) bool {
 		log.Error("[TransferConsumerMsg] update db error: ", err)
 		return false
 	}
-	err = client.GetDBClient().UpdateTransState(data.TransID, conf.Trans_Success)
+	err = client.GetDBClient().UpdateTransState(data.TransID, conf.TransSuccess)
 	if err != nil {
 		log.Error("[TransferConsumerMsg] update db error: ", err)
 		return false
 	}
-	// 删除tmp下文件
-	err = helper.DelFile(data.TmpPath)
-	if err != nil {
-		log.Error("[TransferConsumerMsg] remove tmp file error: ", err)
-		return false
-	}
-	// 删除tmp下缩略图，错误只提示不返回
-	err = helper.DelFile(data.Thumbnail)
-	if err != nil {
-		log.Warn("[TransferConsumerMsg] remove thumbnail error: ", data.FileKey, err)
-	}
+
 	log.Info("[TransferConsumerMsg] transfer file ", data.TmpPath, " success")
 	return true
 }
 
 func TransferProduceMsg(data *models.TransferMsg) error {
 	// TODO rabbit 不可用问题研究
-	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.Routing_Key)
+	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.RoutingKey)
 	defer client.GetMQClient().ReleaseChannel(setting)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
