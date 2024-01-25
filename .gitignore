@@ -1,9 +1,9 @@
 *.ini
 *_test.go
 *.txt
-*.md
-*.sh
+docs/
 .vscode/
 Local storage/
-deploy/
+other/
+*.sh
 .vscode/launch.json

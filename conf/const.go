@@ -3,7 +3,7 @@ package conf
 import "time"
 
 // HTTP启动项
-const App = "./conf/app.ini"
+const App = "./cfg/app.ini"
 const HttpServer = "HttpServer"
 
 // TTL

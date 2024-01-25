@@ -1,0 +1,27 @@
+FROM golang:alpine
+
+# 换国内源
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+
+# 为我们的镜像设置必要的环境变量
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    GOPROXY=https://goproxy.cn
+
+# 移动到工作目录：/build
+WORKDIR /build
+
+# 将代码复制到容器中
+COPY . .
+
+# 初始化go mod
+RUN go mod tidy\
+    && apk add ffmpeg
+
+# 将我们的代码编译成二进制可执行文件app
+RUN go build -o transfer-service run/transfer/main.go
+
+# 启动容器时运行的命令
+CMD /bin/sh -c "/build/transfer-service"
