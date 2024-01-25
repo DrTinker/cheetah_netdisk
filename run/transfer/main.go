@@ -1,8 +1,8 @@
 package main
 
 import (
-	"NetDesk/handler/object"
-	"NetDesk/start"
+	"NetDisk/handler/trans"
+	"NetDisk/start"
 	"fmt"
 )
 
@@ -11,13 +11,18 @@ func init() {
 	start.InitConfig() // 加载配置
 	start.InitDB()     // 数据库
 	start.InitCache()  // 缓存
-	start.InitJWT()
-	start.InitMsg() // 邮件系统
-	start.InitCOS() //对象存储
+	start.InitCOS()    //对象存储
+	start.InitLOS()
 	start.InitMQ()
 }
 
 func main() {
-	fmt.Printf("running transfer service")
-	object.TransferObjectHandler()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("Runtime panic caught: %v\n", err)
+		}
+	}()
+	fmt.Printf("running transfer service\n")
+
+	trans.TransferObjectHandler()
 }

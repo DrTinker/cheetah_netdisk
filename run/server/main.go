@@ -1,8 +1,8 @@
 package main
 
 import (
-	"NetDesk/client"
-	"NetDesk/start"
+	"NetDisk/client"
+	"NetDisk/start"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +17,9 @@ func init() {
 	start.InitMsg() // 邮件系统
 	start.InitCOS() //对象存储
 	start.InitMQ()
+	start.InitMedia() // 媒体文件处理
+	start.InitLOS()
+	start.InitSocket()
 }
 
 func main() {
@@ -25,6 +28,7 @@ func main() {
 
 	start.RegisterRouter(r)
 
+	// 开启http
 	cfg, err := client.GetConfigClient().GetHttpConfig()
 	if err != nil {
 		panic(err)

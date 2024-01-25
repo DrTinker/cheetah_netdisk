@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"NetDesk/client"
-	"NetDesk/conf"
+	"NetDisk/client"
+	"NetDisk/conf"
 )
 
 // 解析jwt，flag为true标识拦截不带token的请求
@@ -49,9 +49,9 @@ func JWT(flag bool) gin.HandlerFunc {
 			return
 		}
 		// 标识携带token登录
-		c.Set(conf.User_ID, t.ID)
-		c.Set(conf.User_Email, t.Email)
-		c.Set(conf.User_PWD, t.Password)
+		c.Set(conf.UserID, t.ID)
+		c.Set(conf.UserEmail, t.Email)
+		c.Set(conf.UserPWD, t.Password)
 		c.Set(conf.JWTFlag, true)
 		c.Next()
 	}

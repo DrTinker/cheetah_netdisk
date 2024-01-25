@@ -1,12 +1,13 @@
 package client
 
 import (
-	"NetDesk/models"
+	"NetDisk/models"
 	"io"
 	"sync"
 	"time"
 )
 
+// 公有云 cloud object storage
 type COSClient interface {
 	// 上传
 	UpLoadLocalFile(key, path string) error

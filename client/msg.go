@@ -1,7 +1,7 @@
 package client
 
 import (
-	"NetDesk/models"
+	"NetDisk/models"
 	"sync"
 )
 
@@ -18,7 +18,7 @@ func GetMsgClient() MsgClient {
 	return msgClient
 }
 
-func InitMsglient(client MsgClient) {
+func InitMsgClient(client MsgClient) {
 	MsgOnce.Do(
 		func() {
 			msgClient = client

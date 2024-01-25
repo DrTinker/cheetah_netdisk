@@ -59,8 +59,8 @@ func (c *CacheClientImpl) SetWithExpire(key string, val interface{}, expire time
 }
 
 // 批量删除keys
-func (c *CacheClientImpl) DelBatch(keys string) (num int64, err error) {
-	return c.CacheClient.Del(keys).Result()
+func (c *CacheClientImpl) DelBatch(keys ...string) (num int64, err error) {
+	return c.CacheClient.Del(keys...).Result()
 }
 
 // hset set

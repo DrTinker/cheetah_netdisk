@@ -1,8 +1,8 @@
 package start
 
 import (
-	"NetDesk/client"
-	"NetDesk/infrastructure/cache"
+	"NetDisk/client"
+	"NetDisk/infrastructure/cache"
 )
 
 func InitCache() {

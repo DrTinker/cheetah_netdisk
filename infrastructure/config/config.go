@@ -1,8 +1,8 @@
 package config
 
 import (
-	"NetDesk/helper"
-	"NetDesk/models"
+	"NetDisk/helper"
+	"NetDisk/models"
 	"errors"
 	"fmt"
 
@@ -17,6 +17,7 @@ type ConfigClientImpl struct {
 	COS    *models.COSConfig
 	Local  *models.LocalConfig
 	MQ     *models.MQConfig
+	LOS    *models.LOSConfig
 	source *ini.File
 }
 
@@ -29,6 +30,7 @@ func NewConfigClientImpl() *ConfigClientImpl {
 		COS:   &models.COSConfig{},
 		Local: &models.LocalConfig{},
 		MQ:    &models.MQConfig{},
+		LOS:   &models.LOSConfig{},
 	}
 }
 
@@ -51,7 +53,7 @@ func (c *ConfigClientImpl) GetHttpConfig() (*models.HttpConfig, error) {
 	if c.source == nil {
 		return nil, errors.New("empty http config")
 	}
-	c.Http.Address = c.source.Section("HttpServer").Key("address").MustString("127.0.0.1")
+	c.Http.Address = c.source.Section("HttpServer").Key("address").String()
 	c.Http.Port = c.source.Section("HttpServer").Key("port").MustInt(8081)
 	return c.Http, nil
 }
@@ -145,4 +147,18 @@ func (c *ConfigClientImpl) GetMQConfig() (*models.MQConfig, error) {
 	c.MQ.Port = c.source.Section("MQ").Key("port").MustInt(5672)
 
 	return c.MQ, nil
+}
+
+func (c *ConfigClientImpl) GetLOSConfig() (*models.LOSConfig, error) {
+	//判断配置是否加载成功
+	if c.source == nil {
+		return nil, errors.New("empty los config")
+	}
+	section := c.source.Section("LOS")
+	c.LOS.Endpoint = section.Key("endpoint").String()
+	c.LOS.AccessKeyID = section.Key("accessKeyID").String()
+	c.LOS.SecretAccessKey = section.Key("secretAccessKey").String()
+	c.LOS.UseSSL = section.Key("useSSL").MustBool()
+
+	return c.LOS, nil
 }

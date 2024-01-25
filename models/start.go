@@ -48,3 +48,11 @@ type MQConfig struct {
 	Address string
 	Port    int
 }
+
+// MinIO存储配置
+type LOSConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+}

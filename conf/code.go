@@ -23,17 +23,21 @@ const ERROR_VERIFY_CODE = 21004                   // 验证码生成错误
 // 邮件
 const ERROR_EMAIL_SEND_CODE = 21005
 
-// 上传
+// 传输
 const ERROR_UPLOAD_CODE = 22000
 const ERROR_VOLUME_COUNT_CODE = 22001
 const ERROR_FILE_CHECK_CODE = 22002 // 文件校验时出错
 const ERROR_FILE_EXIST_CODE = 22003 // 文件存在
+const QUICK_UPLOAD_CODE = 22004     // 文件存在
 const ERROR_FILE_HASH_CODE = 22005  // 文件md5值无效
 const ERROR_GET_URL_CODE = 22006    // 获取预签名错误
 const FILE_EXIST_CODE = 22007       // 同一个用户上传相同文件
+const ERROR_FILE_OWNER_CODE = 22009 // 下载文件的用户不是文件拥有者
+// 分块
+const CHUNK_MISS_CODE = 22008 // 分片传输不完整
 
-// 分片上传
-const ERROR_UPLOAD_PART_INIT_CODE = 22004 // 初始化
+// 获取文件列表
+const ERROR_INVAILD_PAGE_CODE = 22005 // 给定页数超过最大页数
 
 // 文件系统
 const ERROR_LIST_FILES_CODE = 23000
@@ -43,5 +47,6 @@ const ERROR_UPDATE_NAME_CODE = 23003
 const ERROR_DELETE_FILE_CODE = 23004
 
 // 分享
-const ERROR_CREATE_SHARE_CODE = 24000
+const ERROR_CREATE_ShareCode = 24000
 const WARN_SHARE_EXPIRES_CODE = 24001
+const RECORD_DELETED_CODE = 24002

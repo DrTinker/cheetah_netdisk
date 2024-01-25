@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"NetDesk/conf"
+	"NetDisk/conf"
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
@@ -11,22 +11,11 @@ import (
 	"time"
 )
 
-func PathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
-
 func GenRandCode() string {
 	s := "1234567890QWERTYUIOPASDFGHJKLZXCVBNM"
 	code := ""
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < conf.Code_Len; i++ {
+	for i := 0; i < conf.CodeLen; i++ {
 		flag := rand.Intn(len(s))
 		code += string(s[flag])
 	}
@@ -71,44 +60,36 @@ func SplitFilePath(path string) (name, ext string, err error) {
 	if len(path) == 0 || !strings.Contains(path, "/") {
 		return "", "", conf.FilePathError
 	}
-	// 判断时文件还是文件夹
-	isFolder := strings.HasSuffix(path, "/")
 	// 切分
 	names := strings.Split(path, "/")
 	if len(names) == 0 {
 		return "", "", conf.FilePathError
 	}
-	name = names[len(names)-1]
-	// 是文件
-	if !isFolder {
-		part := strings.Split(name, ".")
-		name = part[0]
-		ext = part[1]
-	} else {
-		// 是文件夹
-		// 文件夹切分后最后一个是空字符串
-		name = names[len(names)-2]
-		ext = conf.Folder_Default_EXT
-	}
+	fullName := names[len(names)-1]
+	name, ext, err = SplitFileFullName(fullName)
 
-	return name, ext, nil
+	return name, ext, err
 }
 
 // 切分name.ext -> name ext
 func SplitFileFullName(fullName string) (name string, ext string, err error) {
+	// TODO 文件夹判断不准确 com.example.aaa也可是文件夹名称，需要前端传入ext
 	// 是文件夹则增加默认文件夹扩展名
 	if !strings.Contains(fullName, ".") {
-		fullName = fullName + "." + conf.Folder_Default_EXT
+		fullName = fullName + "." + conf.FolderDefaultExt
 	}
 	if len(fullName) == 0 {
 		return "", "", conf.FilePathError
 	}
 	part := strings.Split(fullName, ".")
-	if len(part) != 2 {
+	if len(part) == 0 {
 		return "", "", conf.FilePathError
 	}
-	name = part[0]
-	ext = part[1]
+	name = ""
+	ext = part[len(part)-1]
+	for i := 0; i < len(part)-1; i++ {
+		name += part[i]
+	}
 	return name, ext, nil
 }
 
@@ -126,4 +107,13 @@ func CountMD5(path string, data []byte, mod int) string {
 	} else {
 		return fmt.Sprintf("%x", md5.Sum(data))
 	}
+}
+
+// 计算num是多少位十进制数
+func CountDigit(num int) int {
+	res := 0
+	for i := num; i > 0; i /= 10 {
+		res++
+	}
+	return res
 }
