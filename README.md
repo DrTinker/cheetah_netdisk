@@ -17,7 +17,7 @@
 5. 云端文件分享：生成已上传文件分享链接，设置提取码及过期时间，通过口令提取分享文件
 6. 混合云存储：采用公有云(腾讯云COS)和私有云(minio)进行文件存储，不同存储间异步转移
 
-前端采用flutter框架开发，仓库地址：https://github.com/DrTinker/NetDisk_front
+前端采用flutter框架开发，仓库地址：https://github.com/DrTinker/netdisk_front
 
 
 
