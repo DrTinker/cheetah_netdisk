@@ -25,18 +25,18 @@
 
 ```
 |-- client			    # 第三方依赖接口定义(db,cache,mq等)
-|-- conf			      # 常量、配置等
+|-- conf			    # 常量、配置等
 |-- deploy			    # 部署相关文件 shell dockerfile等
 |-- handler			    # handler层，处理http请求，调用service层
 |-- helper			    # 各类与业务无关的方法
-|-- infrastructure  # 第三方依赖的具体实现，实现client中定义的接口
-|-- middleware		  # gin中间件
+|-- infrastructure                  # 第三方依赖的具体实现，实现client中定义的接口
+|-- middleware		            # gin中间件
 |-- models			    # 各类struct
-|-- run				      # 各服务运行入口
+|-- run				    # 各服务运行入口
 |   |-- server
 |   `-- transfer
 |-- service			    # 实现业务逻辑，调用client层
-`-- start			      # 项目初始化相关逻辑
+`-- start			    # 项目初始化相关逻辑
 ```
 
 
