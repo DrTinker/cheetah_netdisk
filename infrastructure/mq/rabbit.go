@@ -48,33 +48,38 @@ func (m *MQClientImpl) KeepAlive() {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("Keep alive panic caught: %v\n", err)
+				m.keepAlive()
 			}
 		}()
-		for {
-			//logrus.Warn("keep alive running")
-			select {
-			case close := <-m.closeReciver:
-				// 不可恢复则输出日志
-				logrus.Error(fmt.Sprintf("mq disconnected!!! code: %v reason: %v", close.Code, close.Reason))
-				// 如果是可以恢复的，则进行重连
-				conn, err := amqp.Dial(m.url)
-				for err != nil {
-					conn, err = amqp.Dial(m.url)
-					// 每秒尝试重连
-					time.Sleep(time.Second)
-				}
-				m.conn = conn
-				if conn != nil {
-					logrus.Info("mq reconnected!!!")
-				}
-			case block := <-m.blockReciver:
-				// 输出阻塞原因
-				logrus.Warn("mq blocked by: ", block)
-			default:
-				// do nothing
-			}
-		}
+		m.keepAlive()
 	}()
+}
+
+func (m *MQClientImpl) keepAlive() {
+	for {
+		//logrus.Warn("keep alive running")
+		select {
+		case close := <-m.closeReciver:
+			// 不可恢复则输出日志
+			logrus.Error(fmt.Sprintf("mq disconnected!!! code: %v reason: %v", close.Code, close.Reason))
+			// 如果是可以恢复的，则进行重连
+			conn, err := amqp.Dial(m.url)
+			for err != nil {
+				conn, err = amqp.Dial(m.url)
+				// 每秒尝试重连
+				time.Sleep(time.Second)
+			}
+			m.conn = conn
+			if conn != nil {
+				logrus.Info("mq reconnected!!!")
+			}
+		case block := <-m.blockReciver:
+			// 输出阻塞原因
+			logrus.Warn("mq blocked by: ", block)
+		default:
+			// do nothing
+		}
+	}
 }
 
 func (m *MQClientImpl) InitTransfer(exchange, key string) (*models.TransferSetting, error) {
@@ -120,7 +125,7 @@ func (m *MQClientImpl) InitTransfer(exchange, key string) (*models.TransferSetti
 
 // 一个线程一个channel，用完关闭
 func (m *MQClientImpl) ReleaseChannel(s *models.TransferSetting) {
-	if s.Channel == nil {
+	if s == nil || s.Channel == nil {
 		return
 	}
 	err := s.Channel.Close()
