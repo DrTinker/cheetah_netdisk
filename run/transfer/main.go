@@ -20,6 +20,7 @@ func main() {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("Runtime panic caught: %v\n", err)
+			trans.TransferObjectHandler()
 		}
 	}()
 	fmt.Printf("running transfer service\n")

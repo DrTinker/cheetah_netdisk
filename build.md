@@ -40,6 +40,13 @@ docker run \
 
 导入netdisk.sql
 
+#### 创建队列和交换机
+
+登录rabbitmq web管理端 ip:15672
+创建queue: cheetah_NetDisk_trans_cos
+创建exhange: cheetah_NetDisk type: direct
+建立binding: routing key: cos
+
 #### 部署minio(https)
 
 minio默认只支持http请求，开启https有两种选择
@@ -57,6 +64,7 @@ certgen -ca -host "192.168.0.1,172.17.0.3" # (服务器内网ip,docker容器虚�
 
 # docker容器虚拟ip可通过 (docker inspect 容器id) 命令查询
 ```
+注意自签名证书只能用于容器间的https传输，客户端依然无法通过https访问，因此如果是自签名可以不必开启https(后文中复制证书的步骤也可忽略)
 
 创建容器
 

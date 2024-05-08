@@ -97,10 +97,10 @@ func TransferConsumerMsg(msg []byte) bool {
 func TransferProduceMsg(data *models.TransferMsg) error {
 	// TODO rabbit 不可用问题研究
 	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.RoutingKey)
-	defer client.GetMQClient().ReleaseChannel(setting)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
 	}
+	defer client.GetMQClient().ReleaseChannel(setting)
 	// 序列化msg
 	msg, err := json.Marshal(data)
 	if err != nil {
