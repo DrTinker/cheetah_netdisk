@@ -2,8 +2,10 @@ package mq
 
 import (
 	"NetDisk/conf"
+	"NetDisk/helper"
 	"NetDisk/models"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -17,6 +19,37 @@ type MQClientImpl struct {
 	conn         *amqp.Connection
 	closeReciver chan *amqp.Error
 	blockReciver chan amqp.Blocking
+
+	channelPool helper.Pool
+}
+
+// 连接池工厂类
+type rabbitFactory struct {
+	conn *amqp.Connection
+}
+
+func (rf rabbitFactory) Factory() (interface{}, error) {
+	// 开启channel
+	channel, err := rf.conn.Channel()
+	if err != nil {
+		return nil, errors.Wrap(err, "[rabbitFactory] Factory err:")
+	}
+	return channel, nil
+}
+
+func (rf rabbitFactory) Close(channel interface{}) error {
+	if channel == nil {
+		return errors.New("[rabbitFactory] Close nil channel")
+	}
+	ch, ok := channel.(*amqp.Channel)
+	if !ok {
+		return errors.New("[rabbitFactory] Close wrong channel type")
+	}
+	return ch.Close()
+}
+
+func (rf rabbitFactory) Ping(interface{}) error {
+	return nil
 }
 
 // 一个进程对应一个connection，一个线程对应一个channel
@@ -33,14 +66,32 @@ func NewMQClientImpl(url string) (*MQClientImpl, error) {
 	blockReciver := make(chan amqp.Blocking)
 	// 注入mq对象
 	mq.url = url
-	mq.conn = conn
+	// 创建 tcp 连接和 channel pool
+	mq.setConn(conn)
 	mq.closeReciver = closeReciver
 	mq.blockReciver = blockReciver
 	// 注册关闭事件监听
 	mq.conn.NotifyClose(mq.closeReciver)
 	// 注册阻塞事件监听
 	mq.conn.NotifyBlocked(mq.blockReciver)
+
 	return mq, nil
+}
+
+func (m *MQClientImpl) setConn(conn *amqp.Connection) {
+	m.conn = conn
+	// 创建 channel 的连接池
+	rf := rabbitFactory{conn: conn}
+	poolConfig := helper.PoolConfig{
+		InitialCap: 5,
+		Factory:    rf,
+	}
+	channelPool, err := helper.NewConnectionPool(poolConfig)
+	for err != nil {
+		logrus.Error(fmt.Sprintf("[MQClientImpl] setConn err: %+v", err))
+		channelPool, err = helper.NewConnectionPool(poolConfig)
+	}
+	m.channelPool = channelPool
 }
 
 func (m *MQClientImpl) KeepAlive() {
@@ -69,8 +120,8 @@ func (m *MQClientImpl) keepAlive() {
 				// 每秒尝试重连
 				time.Sleep(time.Second)
 			}
-			m.conn = conn
-			if conn != nil {
+			m.setConn(conn)
+			if m.conn != nil && m.channelPool != nil {
 				logrus.Info("mq reconnected!!!")
 			}
 		case block := <-m.blockReciver:
@@ -82,65 +133,21 @@ func (m *MQClientImpl) keepAlive() {
 	}
 }
 
-func (m *MQClientImpl) InitTransfer(exchange, key string) (*models.TransferSetting, error) {
-	// 开启channel
-	channel, err := m.conn.Channel()
-	if err != nil {
-		return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer err:")
-	}
-	// 不要在代码中声明队列，交换机，binding 参考：https://juejin.cn/post/7125719003510603783
-	// 初始化队列，交换机，binding规则
-	// 声明交换机
-	// err = channel.ExchangeDeclare(conf.Exchange, "direct",
-	// 	true,  // 持久化
-	// 	false, // 自动删除
-	// 	false, // 内置交换机
-	// 	true,  // noWait
-	// 	nil,   // 其他配置
-	// )
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer declare exchange err:")
-	// }
-	// // 声明队列，存在则忽视
-	// qInfo, err := channel.QueueDeclare(conf.TransferCOSQueue,
-	// 	true,  // 持久化
-	// 	false, // 自动删除，false指断开connection本队列不会自动删除
-	// 	false, // 排他性，为true只为本connection中channel共享，conn断开后自动删除
-	// 	true,  // noWait true表示创建不需要等服务器确认
-	// 	nil,   // 其他配置，暂时不用
-	// )
-	// logrus.Info("[MQClientImpl] InitTransfer queue info: ", qInfo)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "[MQClientImpl] InitTransfer declare queue err:")
-	// }
-	// // 绑定交换机和队列
-	// channel.QueueBind()
-	settings := &models.TransferSetting{
-		Channel:   channel,
-		Exchange:  exchange,
-		RoutinKey: key,
-	}
-	return settings, nil
-}
-
-// 一个线程一个channel，用完关闭
-func (m *MQClientImpl) ReleaseChannel(s *models.TransferSetting) {
-	if s == nil || s.Channel == nil {
-		return
-	}
-	err := s.Channel.Close()
-	if err != nil {
-		logrus.Error("channel close err: ", err)
-	}
-}
-
 func (m *MQClientImpl) Publish(setting *models.TransferSetting, msg []byte) error {
 	// 检查连接
 	if m.conn.IsClosed() {
 		return errors.Wrap(conf.MQConnectionClosedError, "[MQClientImpl] Publish err:")
 	}
 	// 发送消息
-	err := setting.Channel.Publish(
+	// 从连接池获取 channel
+	channel, err := m.channelPool.Get()
+	ch, ok := channel.(*amqp.Channel)
+	if err != nil || !ok {
+		return errors.Wrap(err, "[MQClientImpl] Publish err:")
+	}
+	// 放回连接池
+	defer m.channelPool.Put(ch)
+	err = ch.Publish(
 		setting.Exchange,
 		setting.RoutinKey,
 		false, // 消息无法正确被路由则丢弃
@@ -158,8 +165,19 @@ func (m *MQClientImpl) Publish(setting *models.TransferSetting, msg []byte) erro
 }
 
 func (m *MQClientImpl) Consume(setting *models.TransferSetting, queue, consumer string, callback func(msg []byte) bool) error {
-	channel := setting.Channel
-	msgs, err := channel.Consume(
+	// 检查连接
+	if m.conn.IsClosed() {
+		return errors.Wrap(conf.MQConnectionClosedError, "[MQClientImpl] Publish err:")
+	}
+	// 从连接池获取 channel
+	channel, err := m.channelPool.Get()
+	ch, ok := channel.(*amqp.Channel)
+	if err != nil || !ok {
+		return errors.Wrap(err, "[MQClientImpl] Publish err:")
+	}
+	// 放回连接池
+	defer m.channelPool.Put(ch)
+	msgs, err := ch.Consume(
 		queue,
 		consumer,
 		true,  // autoACK
@@ -172,22 +190,19 @@ func (m *MQClientImpl) Consume(setting *models.TransferSetting, queue, consumer 
 		return errors.Wrap(err, "[MQClientImpl] Consume err:")
 	}
 
-	// 用于阻塞循环
-	done := make(chan bool)
-
-	go func() {
-		for msg := range msgs {
+	wg := sync.WaitGroup{}
+	for msg := range msgs {
+		wg.Add(1)
+		// 每个消息开启一个协程处理
+		go func(msg amqp.Delivery) {
 			if success := callback(msg.Body); !success {
 				// TODO 失败转入死信队列
 			}
-		}
-	}()
-	// 循环监听消息队列
-	<-done
-	// 没有消息则结束
-	err = channel.Close()
-	if err != nil {
-		return errors.Wrap(err, "[MQClientImpl] close channel err:")
+			wg.Done()
+		}(msg)
 	}
+
+	wg.Wait()
+
 	return nil
 }

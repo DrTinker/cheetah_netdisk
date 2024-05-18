@@ -3,18 +3,18 @@ package trans
 import (
 	"NetDisk/client"
 	"NetDisk/conf"
+	"NetDisk/models"
 	"NetDisk/service"
 
 	"github.com/sirupsen/logrus"
 )
 
 func TransferObjectHandler() {
-	// 初始化channel
-	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.RoutingKey)
-	if err != nil {
-		logrus.Error("[TransferObjectHandler] init channel error: ", err)
+	setting := &models.TransferSetting{
+		Exchange:  conf.Exchange,
+		RoutinKey: conf.RoutingKey,
 	}
-	err = client.GetMQClient().Consume(setting, conf.TransferCOSQueue, "transfer_consumer", service.TransferConsumerMsg)
+	err := client.GetMQClient().Consume(setting, conf.TransferCOSQueue, "transfer_consumer", service.TransferConsumerMsg)
 	if err != nil {
 		logrus.Error("[TransferObjectHandler] init channel error: ", err)
 	}

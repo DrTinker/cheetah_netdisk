@@ -52,7 +52,7 @@ docker run \
 minio默认只支持http请求，开启https有两种选择
 
 1. 为minio配置ssl证书（本文选择此方案）
-2. nginx反向代理（本文给出nginx.conf文件）
+2. nginx反向代理
 
 生成自签名证书(有域名及ssl证书忽略此步)
 
@@ -85,52 +85,6 @@ docker run \
 测试minio
 
 在浏览器输入https://ip:9001访问minio客户端
-
-niginx方式
-
-```conf
-#minio ProxyStart
-    
-    upstream minio {
-    	# 172.17.0.3为minio容器虚拟ip，docker inspect命令可查看
-    	# 多个minio的话全部配置在这里
-        server 172.17.0.3:9000 fail_timeout=0;
-    }
-    server {
-         listen 443 ssl;
-         server_name 127.0.0.1;
-
-        ssl_certificate     /etc/ssl/a/public.crt; #这里换成你的证书上传的位置 
-         ssl_certificate_key /etc/ssl/a/private.key; #这里换成你的私钥上传的位置
-         ssl_session_timeout 5m;
-         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-         ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
-         ssl_prefer_server_ciphers on;   
-         client_max_body_size   30m; #最大上传限制         
-
-        location / {
-            root   html;
-            index  index.html index.htm;
-            proxy_pass   http://minio;
-
-            proxy_set_header  Host       $host;
-            proxy_set_header  X-Real-IP    $remote_addr;
-            proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
-
-            proxy_redirect off;
-            proxy_connect_timeout      310;
-            proxy_send_timeout         310;
-            proxy_read_timeout         310;
-
-        }
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   /usr/share/nginx/html;
-        }
-    }   
-   
- #minio ProxyEnd
-```
 
 #### 部署后端服务
 
@@ -207,8 +161,8 @@ port = 5672
 endpoint = eminio:9000
 accessKeyID = myaccessKeyID
 secretAccessKey = mysecretAccessKey
-# 是否https，docker部署的话必须为true，测试可以设为false
-useSSL = true
+# minio 是否支持 https 访问, 没有域名的建议为 false
+useSSL = false
 ```
 
 

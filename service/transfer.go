@@ -95,18 +95,16 @@ func TransferConsumerMsg(msg []byte) bool {
 }
 
 func TransferProduceMsg(data *models.TransferMsg) error {
-	// TODO rabbit 不可用问题研究
-	setting, err := client.GetMQClient().InitTransfer(conf.Exchange, conf.RoutingKey)
-	if err != nil {
-		return errors.Wrap(err, "[UploadObject] init transfer channel error: ")
-	}
-	defer client.GetMQClient().ReleaseChannel(setting)
 	// 序列化msg
 	msg, err := json.Marshal(data)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] parse msg error: ")
 	}
 	// 发布
+	setting := &models.TransferSetting{
+		Exchange:  conf.Exchange,
+		RoutinKey: conf.RoutingKey,
+	}
 	err = client.GetMQClient().Publish(setting, msg)
 	if err != nil {
 		return errors.Wrap(err, "[UploadObject] publish msg error: ")
