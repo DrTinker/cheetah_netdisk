@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"github.com/streadway/amqp"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +57,6 @@ type Part struct {
 
 // 文件异步上传cos相关结构体
 type TransferSetting struct {
-	Channel   *amqp.Channel
 	Exchange  string
 	RoutinKey string
 }

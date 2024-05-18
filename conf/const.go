@@ -30,7 +30,7 @@ const UserTB = "user"
 const ShareTB = "share"
 const UserFileTB = "user_file"
 const TransTB = "trans"
-const MaxConn = 100
+const MaxConn = 20
 const MaxIdleConn = 10
 const MaxIdleTime = time.Second * 30
 
