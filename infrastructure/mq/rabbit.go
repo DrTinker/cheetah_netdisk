@@ -60,26 +60,20 @@ func NewMQClientImpl(url string) (*MQClientImpl, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 创建队列
-	// 监听机制
-	closeReciver := make(chan *amqp.Error)
-	blockReciver := make(chan amqp.Blocking)
 	// 注入mq对象
 	mq.url = url
 	// 创建 tcp 连接和 channel pool
 	mq.setConn(conn)
-	mq.closeReciver = closeReciver
-	mq.blockReciver = blockReciver
-	// 注册关闭事件监听
-	mq.conn.NotifyClose(mq.closeReciver)
-	// 注册阻塞事件监听
-	mq.conn.NotifyBlocked(mq.blockReciver)
 
 	return mq, nil
 }
 
 func (m *MQClientImpl) setConn(conn *amqp.Connection) {
 	m.conn = conn
+	// 注册关闭事件监听
+	m.closeReciver = m.conn.NotifyClose(make(chan *amqp.Error))
+	// 注册阻塞事件监听
+	m.blockReciver = m.conn.NotifyBlocked(make(chan amqp.Blocking))
 	// 创建 channel 的连接池
 	rf := rabbitFactory{conn: conn}
 	poolConfig := helper.PoolConfig{
@@ -108,11 +102,14 @@ func (m *MQClientImpl) KeepAlive() {
 
 func (m *MQClientImpl) keepAlive() {
 	for {
-		//logrus.Warn("keep alive running")
+		logrus.Info("keep alive running")
 		select {
 		case close := <-m.closeReciver:
 			// 不可恢复则输出日志
-			logrus.Error(fmt.Sprintf("mq disconnected!!! code: %v reason: %v", close.Code, close.Reason))
+			if close != nil {
+				logrus.Error(fmt.Sprintf("mq disconnected!!! code: %v reason: %v", close.Code, close.Reason))
+			}
+
 			// 如果是可以恢复的，则进行重连
 			conn, err := amqp.Dial(m.url)
 			for err != nil {
@@ -124,11 +121,10 @@ func (m *MQClientImpl) keepAlive() {
 			if m.conn != nil && m.channelPool != nil {
 				logrus.Info("mq reconnected!!!")
 			}
+
 		case block := <-m.blockReciver:
 			// 输出阻塞原因
 			logrus.Warn("mq blocked by: ", block)
-		default:
-			// do nothing
 		}
 	}
 }
@@ -167,13 +163,13 @@ func (m *MQClientImpl) Publish(setting *models.TransferSetting, msg []byte) erro
 func (m *MQClientImpl) Consume(setting *models.TransferSetting, queue, consumer string, callback func(msg []byte) bool) error {
 	// 检查连接
 	if m.conn.IsClosed() {
-		return errors.Wrap(conf.MQConnectionClosedError, "[MQClientImpl] Publish err:")
+		return errors.Wrap(conf.MQConnectionClosedError, "[MQClientImpl] Consume err:")
 	}
 	// 从连接池获取 channel
 	channel, err := m.channelPool.Get()
 	ch, ok := channel.(*amqp.Channel)
 	if err != nil || !ok {
-		return errors.Wrap(err, "[MQClientImpl] Publish err:")
+		return errors.Wrap(err, "[MQClientImpl] Consume err:")
 	}
 	// 放回连接池
 	defer m.channelPool.Put(ch)

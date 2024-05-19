@@ -90,10 +90,14 @@ func UploadFileByStream(param *models.UploadObjectParams, data []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "[UploadFileByStream] upload los error: ")
 	}
-	err = client.GetLOSClient().FPutObject(tnFileKey, tnPath, true)
-	if err != nil {
-		return errors.Wrap(err, "[UploadFileByStream] upload los error: ")
+	// 缩略图存在才上传
+	if tnFileKey != "" && tnPath != "" {
+		err = client.GetLOSClient().FPutObject(tnFileKey, tnPath, true)
+		if err != nil {
+			return errors.Wrap(err, "[UploadFileByStream] upload los error: ")
+		}
 	}
+
 	// 写mq
 	msg := &models.TransferMsg{
 		TransID:   param.UploadID,
@@ -192,10 +196,14 @@ func UploadFileByPath(param *models.UploadObjectParams, path string) error {
 	defer helper.DelFile(tnPath)
 	// 缩略图存私有云
 	tnFileKey := helper.GenThumbnailKey(tnName)
-	err := client.GetLOSClient().FPutObject(tnFileKey, tnPath, true)
-	if err != nil {
-		errors.Wrap(err, "[UploadFileByPath] los put thumbnail error: ")
+	// 缩略图存在才上传
+	if tnFileKey != "" && tnPath != "" {
+		err := client.GetLOSClient().FPutObject(tnFileKey, tnPath, true)
+		if err != nil {
+			errors.Wrap(err, "[UploadFileByPath] los put thumbnail error: ")
+		}
 	}
+
 	fileDB.Thumbnail = tnFileKey
 	userFileDB.Thumbnail = tnFileKey
 	// 写mq
@@ -212,7 +220,7 @@ func UploadFileByPath(param *models.UploadObjectParams, path string) error {
 		StoreType: conf.StoreTypeCOS,
 		Task:      conf.UploadMod,
 	}
-	err = TransferProduceMsg(msg)
+	err := TransferProduceMsg(msg)
 	if err != nil {
 		return errors.Wrap(err, "[UploadFileByPath] send msg to MQ error: ")
 	}

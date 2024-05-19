@@ -5,6 +5,8 @@ import (
 	"NetDisk/conf"
 	"NetDisk/models"
 	"NetDisk/service"
+	"errors"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -14,8 +16,16 @@ func TransferObjectHandler() {
 		Exchange:  conf.Exchange,
 		RoutinKey: conf.RoutingKey,
 	}
-	err := client.GetMQClient().Consume(setting, conf.TransferCOSQueue, "transfer_consumer", service.TransferConsumerMsg)
-	if err != nil {
-		logrus.Error("[TransferObjectHandler] init channel error: ", err)
+	for {
+		err := client.GetMQClient().Consume(setting, conf.TransferCOSQueue, "transfer_consumer", service.TransferConsumerMsg)
+		if err != nil {
+			if errors.Is(err, conf.MQConnectionClosedError) {
+				// 连接问题则每隔10s尝试
+				logrus.Error("[TransferObjectHandler] conn error: ", err)
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			logrus.Error("[TransferObjectHandler] consume error: ", err)
+		}
 	}
 }
